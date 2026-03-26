@@ -380,7 +380,7 @@ export default function PartnerOnboarding() {
                           </div>
                         </div>
                       ))}
-                      {formData.galleryImages.length < 10 && (
+                      {formData.galleryImages.length < 50 && (
                         <label className="border-2 border-dashed border-gray-300 rounded-lg aspect-video flex flex-col items-center justify-center cursor-pointer hover:border-orange-500 transition-colors">
                           <Upload className="size-8 text-gray-400 mb-2" />
                           <span className="text-sm font-medium text-gray-700">Upload Image</span>

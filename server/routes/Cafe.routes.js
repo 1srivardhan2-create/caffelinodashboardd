@@ -45,7 +45,7 @@ router.get("/status", authCafe, getCafeStatus);
 router.post(
   "/register",
   upload.fields([
-    { name: "Cafe_photos", maxCount: 10 },
+    { name: "Cafe_photos", maxCount: 50 },
     { name: "profile_picture", maxCount: 1 },
     { name: "upi_photo", maxCount: 1 }
   ]),
@@ -67,15 +67,15 @@ router.get("/items", authCafe,cafeApproved,  getItems);
 router.get("/items/:menuId", authCafe, cafeApproved, getItemById);
 
 router.get("/orders/cafe", authCafe, cafeApproved, getCafeOrders);
-router.patch("/orders/:orderId/status", cafeApproved, authCafe, updateOrderStatus);
-router.post("/orders/:orderId/collect-payment", cafeApproved, authCafe, collectPayment);
-router.get("/orders/cafe/total", cafeApproved, authCafe, getCafeTotalAmount);
+router.patch("/orders/:orderId/status", authCafe, cafeApproved, updateOrderStatus);
+router.post("/orders/:orderId/collect-payment", authCafe, cafeApproved, collectPayment);
+router.get("/orders/cafe/total", authCafe, cafeApproved, getCafeTotalAmount);
 router.patch("/orders/:orderId/delete", authCafe, cafeApproved, deleteOrderDashboard);
 router.patch("/orders/:orderId/restore", authCafe, cafeApproved, restoreOrderDashboard);
 
 // Album photo management
 router.post("/albums/profile", authCafe, cafeApproved, upload.single("profile_picture"), updateProfilePhoto);
-router.post("/albums/gallery", authCafe, cafeApproved, upload.array("gallery_images", 10), updateGalleryPhotos);
+router.post("/albums/gallery", authCafe, cafeApproved, upload.array("gallery_images", 50), updateGalleryPhotos);
 router.delete("/albums/gallery/:index", authCafe, cafeApproved, deleteGalleryPhoto);
 
 router.get("/dashboard", authCafe, cafeApproved, (req, res) => {

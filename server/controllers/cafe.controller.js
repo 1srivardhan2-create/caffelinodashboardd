@@ -639,7 +639,7 @@ const updateOrderStatus = async (req, res) => {
     const { status } = req.body;
 
     const order = await Order.findOneAndUpdate(
-      { _id: orderId, cafe: cafeId },
+      { _id: orderId, $or: [{ cafe: cafeId }, { cafeId: cafeId }] },
       { orderStatus: status },
       { new: true }
     );
@@ -668,7 +668,7 @@ const collectPayment = async (req, res) => {
     }
 
     // 1️⃣ Find order belonging to this cafe
-    const order = await Order.findOne({ _id: orderId, cafe: cafeId });
+    const order = await Order.findOne({ _id: orderId, $or: [{ cafe: cafeId }, { cafeId: cafeId }] });
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -807,7 +807,7 @@ const deleteOrderDashboard = async (req, res) => {
     const { orderId } = req.params;
 
     const order = await Order.findOneAndUpdate(
-      { _id: orderId, cafe: cafeId },
+      { _id: orderId, $or: [{ cafe: cafeId }, { cafeId: cafeId }] },
       { isDeleted: true },
       { new: true }
     );
@@ -826,7 +826,7 @@ const restoreOrderDashboard = async (req, res) => {
     const { orderId } = req.params;
 
     const order = await Order.findOneAndUpdate(
-      { _id: orderId, cafe: cafeId },
+      { _id: orderId, $or: [{ cafe: cafeId }, { cafeId: cafeId }] },
       { isDeleted: false },
       { new: true }
     );

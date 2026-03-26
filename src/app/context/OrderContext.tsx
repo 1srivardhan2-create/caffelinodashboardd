@@ -69,7 +69,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     const fetchData = async () => {
       try {
         const [ordersRes, menuRes] = await Promise.all([
-          api.get('/api/cafe/orders/cafe').catch(() => []),
+          api.get('/api/orders').catch(() => []),
           api.get('/api/cafe/items').catch(() => [])
         ]);
 

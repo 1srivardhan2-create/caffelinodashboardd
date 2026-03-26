@@ -1,4 +1,5 @@
-import { useOrders } from '../../context/OrderContext';
+import { useState, useEffect } from 'react';
+import { api } from '../../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -6,7 +7,46 @@ import { ShoppingBag, Clock, DollarSign, CheckCircle2, CheckCircle, Package, Tra
 import { toast } from 'sonner';
 
 export default function DashboardHome() {
-  const { orders, getEarnings, acceptOrder, completeOrder, deleteOrder, restoreOrder } = useOrders();
+  const [orders, setOrders] = useState<any[]>([]);
+
+  const fetchOrders = async () => {
+    try {
+      const data = await api.get('/api/orders');
+      if (Array.isArray(data)) {
+        const mappedOrders = data.map((o: any) => {
+             const rawStatus = (o.orderStatus || 'PENDING').toUpperCase();
+             let status: 'pending' | 'confirmed' | 'completed' = 'pending';
+             if (rawStatus === 'COMPLETED' || o.status === 'completed') status = 'completed';
+             else if (rawStatus !== 'PENDING') status = 'confirmed';
+             return {
+               id: o._id,
+               orderId: o.orderId || undefined,
+               userName: o.userName || o.user?.name || undefined,
+               items: (o.items || []).map((i: any) => ({
+                 id: i.menuItem?._id || i._id || Math.random().toString(),
+                 name: i.name || i.menuItem?.item_name || 'Item',
+                 price: i.price || 0,
+                 quantity: i.quantity || 1
+               })),
+               subtotal: o.subtotal || 0,
+               cgst: o.cgst || 0,
+               sgst: o.sgst || 0,
+               totalAmount: o.totalAmount || 0,
+               status,
+               createdAt: new Date(o.createdAt),
+               isDeleted: o.isDeleted || false
+             };
+          });
+        setOrders(mappedOrders);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
   
   const activeOrders = orders.filter(o => !o.isDeleted);
   const deletedOrders = orders.filter(o => o.isDeleted);
@@ -15,16 +55,46 @@ export default function DashboardHome() {
   const pendingOrders = activeOrders.filter(o => o.status === 'pending');
   const confirmedOrders = activeOrders.filter(o => o.status === 'confirmed');
   const completedOrders = activeOrders.filter(o => o.status === 'completed');
-  const earnings = getEarnings();
 
-  const handleAccept = (orderId: string) => {
-    acceptOrder(orderId);
-    toast.success('Order accepted!');
+  const handleAccept = async (orderId: string) => {
+    try {
+      // Still using the old status endpoint or we can assume it works when we fix backend cafeApproved bug
+      await api.patch(`/api/cafe/orders/${orderId}/status`, { status: "ACCEPTED" });
+      toast.success('Order accepted!');
+      fetchOrders();
+    } catch (e) {
+      toast.error('Failed to accept order');
+    }
   };
 
-  const handleComplete = (orderId: string) => {
-    completeOrder(orderId);
-    toast.success('Order completed! Added to earnings.');
+  const handleComplete = async (orderId: string) => {
+    try {
+      await api.put(`/api/orders/complete/${orderId}`, {});
+      toast.success('Order completed! Added to earnings.');
+      fetchOrders();
+    } catch (e) {
+      toast.error('Failed to complete order');
+    }
+  };
+
+  const deleteOrder = async (orderId: string) => {
+    try {
+      await api.patch(`/api/cafe/orders/${orderId}/delete`, {});
+      toast.info("Moved to Trash");
+      fetchOrders();
+    } catch (e) {
+      toast.error("Failed to delete");
+    }
+  };
+
+  const restoreOrder = async (orderId: string) => {
+    try {
+      await api.patch(`/api/cafe/orders/${orderId}/restore`, {});
+      toast.success("Order Restored!");
+      fetchOrders();
+    } catch (e) {
+      toast.error("Failed to restore");
+    }
   };
 
   const stats = [

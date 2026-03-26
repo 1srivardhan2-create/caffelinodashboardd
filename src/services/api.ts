@@ -37,6 +37,17 @@ export const api = {
     });
     return res.json();
   },
+  put: async (url: string, data: any) => {
+    const res = await fetch(`${BASE_URL}${url}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
   putForm: async (url: string, formData: FormData) => {
     const res = await fetch(`${BASE_URL}${url}`, {
       method: "PUT",

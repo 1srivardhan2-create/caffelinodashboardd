@@ -20,6 +20,7 @@ app.use(cookieParser());
 
 app.use("/api/cafe", cafeRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api", require("./routes/order.routes"));
 app.use("/uploads", express.static("uploads"));
 
 mongoose

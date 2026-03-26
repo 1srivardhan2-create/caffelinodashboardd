@@ -109,14 +109,22 @@ export default function CafeDetails() {
     if (cart.length === 0) return;
     setIsCheckingOut(true);
     try {
-      const res = await api.post(`/api/cafe/user/${id}/order`, { 
-        items: cart, 
-        subtotal: cartTotal,
-        cgst: cgst,
-        sgst: sgst,
-        totalAmount: finalTotal 
+      // @ts-ignore
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:4000"}/api/orders/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          cafeId: id,
+          items: cart, 
+          subtotal: cartTotal,
+          cgst: cgst,
+          sgst: sgst,
+          totalAmount: finalTotal 
+        })
       });
-      toast.success(res.message || 'Order placed successfully!');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Server error');
+      toast.success(data.message || 'Order placed successfully!');
       setCart([]);
     } catch (error: any) {
       toast.error(error.message || 'Failed to place order');

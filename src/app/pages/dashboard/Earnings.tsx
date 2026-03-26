@@ -1,25 +1,70 @@
-import { useOrders } from '../../context/OrderContext';
+import { useState, useEffect } from 'react';
+import { api } from '../../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
 
 export default function Earnings() {
-  const { getEarnings } = useOrders();
-  const earnings = getEarnings();
+  const [earnings, setEarnings] = useState<any>({
+    totalAmount: 0,
+    commission: 0,
+    finalAmount: 0,
+    completedOrders: []
+  });
+
+  const fetchEarningsData = async () => {
+    try {
+      const [earningsData, ordersData] = await Promise.all([
+        api.get('/api/earnings'),
+        api.get('/api/orders')
+      ]);
+
+      let completedOrders: any[] = [];
+      if (Array.isArray(ordersData)) {
+        completedOrders = ordersData
+          .filter(o => o.orderStatus === 'COMPLETED' || o.status === 'completed' || o.orderStatus === 'completed')
+          .map((o: any) => ({
+             id: o._id,
+             orderId: o.orderId || undefined,
+             items: (o.items || []).map((i: any) => ({
+                 id: i.menuItem?._id || i._id || Math.random().toString(),
+                 name: i.name || i.menuItem?.item_name || 'Item',
+                 price: i.price || 0,
+                 quantity: i.quantity || 1
+             })),
+             totalAmount: o.totalAmount || 0,
+             completedAt: o.updatedAt ? new Date(o.updatedAt) : new Date(o.createdAt)
+          }));
+      }
+
+      setEarnings({
+        totalAmount: earningsData.totalRevenue || 0,
+        commission: (earningsData.totalRevenue || 0) * 0.06,
+        finalAmount: earningsData.totalEarnings || 0,
+        completedOrders: completedOrders
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchEarningsData();
+  }, []);
 
   // Calculate current month revenue
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  const currentMonthOrders = earnings.completedOrders.filter(order => {
+  const currentMonthOrders = earnings.completedOrders.filter((order: any) => {
     const orderDate = order.completedAt;
     return orderDate && 
            orderDate.getMonth() === currentMonth && 
            orderDate.getFullYear() === currentYear;
   });
-  const currentMonthRevenue = currentMonthOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const currentMonthRevenue = currentMonthOrders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
 
   // Group orders by month for monthly breakdown
-  const monthlyData = earnings.completedOrders.reduce((acc, order) => {
+  const monthlyData = earnings.completedOrders.reduce((acc: any, order: any) => {
     if (!order.completedAt) return acc;
     
     const monthYear = `${order.completedAt.toLocaleString('default', { month: 'long' })} ${order.completedAt.getFullYear()}`;
@@ -85,7 +130,7 @@ export default function Earnings() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">₹{earnings.totalAmount.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">₹{earnings.finalAmount.toFixed(2)}</div>
             <p className="text-xs text-gray-600 mt-1">From all completed orders</p>
           </CardContent>
         </Card>
@@ -106,7 +151,7 @@ export default function Earnings() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {monthlyBreakdown.map(([month, data]) => (
+                {monthlyBreakdown.map(([month, data]: any) => (
                   <TableRow key={month}>
                     <TableCell className="font-medium">{month}</TableCell>
                     <TableCell className="text-right">{data.orders}</TableCell>
@@ -137,7 +182,7 @@ export default function Earnings() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {earnings.completedOrders.map(order => {
+              {earnings.completedOrders.map((order: any) => {
                 return (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.orderId || order.id.slice(-6)}</TableCell>
@@ -147,7 +192,7 @@ export default function Earnings() {
                     <TableCell>{order.items.length} items</TableCell>
                     <TableCell className="text-right">₹{order.totalAmount.toFixed(2)}</TableCell>
                     <TableCell className="text-right font-semibold text-green-600">
-                      ₹{order.totalAmount.toFixed(2)}
+                      ₹{(order.totalAmount * 0.94).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 );
