@@ -3,7 +3,7 @@ import { api } from '../../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { ShoppingBag, Clock, DollarSign, CheckCircle2, CheckCircle, Package, Trash2, Undo2 } from 'lucide-react';
+import { ShoppingBag, Clock, DollarSign, CheckCircle2, CheckCircle, Package, Trash2, Undo2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function DashboardHome() {
@@ -55,6 +55,78 @@ export default function DashboardHome() {
   const pendingOrders = activeOrders.filter(o => o.status === 'pending');
   const confirmedOrders = activeOrders.filter(o => o.status === 'confirmed');
   const completedOrders = activeOrders.filter(o => o.status === 'completed');
+
+  const handlePrintReceipt = (order: any) => {
+    const printWindow = window.open('', '', 'width=300,height=600');
+    if (!printWindow) return toast.error('Pop-up blocked. Please allow pop-ups to print.');
+
+    const itemsHtml = order.items.map((item: any) => `
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px;">
+        <span>${item.name} x${item.quantity}</span>
+        <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+      </div>
+    `).join('');
+
+    const html = `
+      <html>
+        <head>
+          <title>Receipt #${order.orderId || order.id.slice(-6)}</title>
+          <style>
+            body { font-family: 'Courier New', Courier, monospace; width: 300px; margin: 0; padding: 10px; color: #000; }
+            .text-center { text-align: center; }
+            .font-bold { font-weight: bold; }
+            .divider { border-top: 1px dashed #000; margin: 10px 0; }
+            .flex-between { display: flex; justify-content: space-between; }
+            @media print { @page { margin: 0; } body { margin: 1cm; } }
+          </style>
+        </head>
+        <body>
+          <h2 class="text-center">CAFFELINO</h2>
+          <div class="text-center" style="font-size: 14px; margin-bottom: 10px;">
+            Order #${order.orderId || order.id.slice(-6)}
+          </div>
+          ${order.userName ? `<div style="font-size: 14px; margin-bottom: 5px;">Customer: ${order.userName}</div>` : ''}
+          <div style="font-size: 14px; margin-bottom: 15px;">Date: ${new Date(order.createdAt).toLocaleString()}</div>
+          
+          <div class="divider"></div>
+          ${itemsHtml}
+          <div class="divider"></div>
+          
+          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
+            <span>Subtotal:</span>
+            <span>₹${order.subtotal.toFixed(2)}</span>
+          </div>
+          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
+            <span>CGST:</span>
+            <span>₹${order.cgst.toFixed(2)}</span>
+          </div>
+          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
+            <span>SGST:</span>
+            <span>₹${order.sgst.toFixed(2)}</span>
+          </div>
+          
+          <div class="divider"></div>
+          <div class="flex-between font-bold" style="font-size: 16px;">
+            <span>TOTAL:</span>
+            <span>₹${order.totalAmount.toFixed(2)}</span>
+          </div>
+          <div class="divider"></div>
+          
+          <div class="text-center font-bold" style="font-size: 14px; margin-top: 20px;">
+            THANK YOU!
+          </div>
+          
+          <script>
+            window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
 
   const handleAccept = async (orderId: string) => {
     try {
@@ -219,13 +291,23 @@ export default function DashboardHome() {
             )}
 
             {order.status === 'confirmed' && (
-              <Button
-                className="w-full bg-green-500 hover:bg-green-600"
-                onClick={() => handleComplete(order.id)}
-              >
-                <CheckCircle className="mr-2 size-4" />
-                Complete Order
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-green-500 hover:bg-green-600"
+                  onClick={() => handleComplete(order.id)}
+                >
+                  <CheckCircle className="mr-2 size-4" />
+                  Complete Order
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full border-green-500 text-green-600 hover:bg-green-50"
+                  onClick={() => handlePrintReceipt(order)}
+                >
+                  <Printer className="mr-2 size-4" />
+                  Print Receipt
+                </Button>
+              </div>
             )}
           </>
         )}
