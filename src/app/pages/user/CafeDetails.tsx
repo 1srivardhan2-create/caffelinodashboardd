@@ -109,8 +109,8 @@ export default function CafeDetails() {
     if (cart.length === 0) return;
     setIsCheckingOut(true);
     try {
-      // @ts-ignore
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:4000"}/api/orders/create`, {
+      const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://localhost:4000" : "https://caffelinodashboardd.onrender.com");
+      const res = await fetch(`${apiBase}/api/orders/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

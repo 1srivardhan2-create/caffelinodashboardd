@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || (
   window.location.hostname === "localhost"
     ? "http://localhost:4000"
-    : "https://caffelino90-9v4a.onrender.com"
+    : "https://caffelinodashboardd.onrender.com"
 );
 
 export const api = {
