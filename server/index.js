@@ -12,7 +12,12 @@ const adminRoutes = require("./routes/admin.routes");
 const orderRoutes = require("./routes/order.routes");
 
 app.use(cors({
-  origin: ["http://localhost:3001", "http://localhost:3000"],
+  origin: [
+    "http://localhost:3001",
+    "http://localhost:3000",
+    "https://caffelinocafes.in",
+    "https://www.caffelinocafes.in"
+  ],
   credentials: true
 }));
 app.use(express.json());

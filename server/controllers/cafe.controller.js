@@ -41,8 +41,8 @@ const googleLogin = async (req, res) => {
 
       res.cookie('token', token, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
@@ -221,8 +221,8 @@ const registerCafe = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-       secure: false,   //process.env.NODE_ENV === 'production',-- for production
-      sameSite: 'lax', //for production is strict
+      secure: true,
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -281,8 +281,8 @@ const Logincafe = async (req, res) => {
     
     res.cookie('token', token, {
       httpOnly: true,
-       secure: false,   //process.env.NODE_ENV === 'production',-- for production
-      sameSite: 'lax', //for production is strict
+      secure: true,
+      sameSite: 'none',
       maxAge: 24 * 60 * 60 * 1000
     });
 
