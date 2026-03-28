@@ -79,14 +79,14 @@ export default function MenuManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.price || !formData.category) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     setLoading(true);
-    
+
     try {
       const payload = new FormData();
       payload.append('item_name', formData.name);
@@ -95,7 +95,7 @@ export default function MenuManagement() {
       payload.append('Category', formData.category);
       payload.append('food_type', formData.foodType);
       payload.append('available', String(formData.available));
-      
+
       if (selectedFile) {
         payload.append('image', selectedFile);
       } else if (editingItem && formData.image) {
@@ -109,7 +109,7 @@ export default function MenuManagement() {
         await addMenuItem(payload);
         toast.success('Menu item added successfully!');
       }
-      
+
       resetForm();
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong. Please try again.');
@@ -152,7 +152,7 @@ export default function MenuManagement() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
-    
+
     setLoading(true);
     try {
       await deleteMenuItem(id);
@@ -342,8 +342,8 @@ export default function MenuManagement() {
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-orange-500 hover:bg-orange-600"
                 disabled={loading}
               >
@@ -367,10 +367,10 @@ export default function MenuManagement() {
       {!loading && menuItems.length > 0 && (
         <div className="flex overflow-x-auto pb-2 mb-6 gap-2">
           {['All', ...categories.map(c => c.value)].map(category => {
-            const count = category === 'All' 
-              ? menuItems.length 
+            const count = category === 'All'
+              ? menuItems.length
               : menuItems.filter(item => item.category === category).length;
-            
+
             return (
               <Button
                 key={category}
@@ -421,69 +421,76 @@ export default function MenuManagement() {
           {menuItems
             .filter(item => activeTab === 'All' || item.category === activeTab)
             .map(item => {
-            const categoryInfo = getCategoryIcon(item.category);
-            const CategoryIcon = categoryInfo.icon;
-            return (
-              <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow relative">
-                <div className="aspect-square relative">
-                  <ImageWithFallback
-                    src={item.image ? optimizeCloudinaryUrl(item.image, 500, 'auto', 'webp') : ''}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
-                    <Badge className={item.available ? 'bg-green-500' : 'bg-red-500'}>
-                      {item.available ? 'In Stock' : 'Out of Stock'}
-                    </Badge>
-                  </div>
-                  <div className="absolute top-3 left-3">
-                    <div className={`w-5 h-5 rounded-sm border-2 ${item.foodType === 'Veg' ? 'border-green-600 bg-white' : 'border-red-600 bg-white'} flex items-center justify-center shadow-sm`}>
-                      <div className={`w-2.5 h-2.5 rounded-full ${item.foodType === 'Veg' ? 'bg-green-600' : 'bg-red-600'}`}></div>
+              const categoryInfo = getCategoryIcon(item.category);
+              const CategoryIcon = categoryInfo.icon;
+              return (
+                <Card key={item.id} className={`overflow-hidden hover:shadow-lg transition-shadow relative ${!item.available ? 'border-2 border-red-400 opacity-75' : ''}`}>
+                  <div className="aspect-square relative">
+                    <ImageWithFallback
+                      src={item.image ? optimizeCloudinaryUrl(item.image, 500, 'auto', 'webp') : ''}
+                      alt={item.name}
+                      className={`w-full h-full object-cover ${!item.available ? 'grayscale' : ''}`}
+                    />
+                    {!item.available && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm tracking-wide shadow-lg">
+                          OUT OF STOCK
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
+                      <Badge className={item.available ? 'bg-green-500' : 'bg-red-600 animate-pulse'}>
+                        {item.available ? 'In Stock' : 'Unavailable'}
+                      </Badge>
+                    </div>
+                    <div className="absolute top-3 left-3">
+                      <div className={`w-5 h-5 rounded-sm border-2 ${item.foodType === 'Veg' ? 'border-green-600 bg-white' : 'border-red-600 bg-white'} flex items-center justify-center shadow-sm`}>
+                        <div className={`w-2.5 h-2.5 rounded-full ${item.foodType === 'Veg' ? 'bg-green-600' : 'bg-red-600'}`}></div>
+                      </div>
+                    </div>
+                    <div className="absolute bottom-2 left-2">
+                      <div className={`${categoryInfo.color} px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-medium`}>
+                        <CategoryIcon className="size-3" />
+                        {item.category}
+                      </div>
                     </div>
                   </div>
-                  <div className="absolute bottom-2 left-2">
-                    <div className={`${categoryInfo.color} px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-medium`}>
-                      <CategoryIcon className="size-3" />
-                      {item.category}
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg truncate">{item.name}</CardTitle>
+                        {item.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-lg font-bold text-orange-600 whitespace-nowrap">₹{item.price}</p>
                     </div>
-                  </div>
-                </div>
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg truncate">{item.name}</CardTitle>
-                      {item.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <p className="text-lg font-bold text-orange-600 whitespace-nowrap">₹{item.price}</p>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleEdit(item)}
-                  >
-                    <Pencil className="mr-2 size-4" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDelete(item.id)}
-                  >
-                    <Trash2 className="mr-2 size-4" />
-                    Delete
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardHeader>
+                  <CardContent className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleEdit(item)}
+                    >
+                      <Pencil className="mr-2 size-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash2 className="mr-2 size-4" />
+                      Delete
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
         </div>
       )}
     </div>

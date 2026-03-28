@@ -377,7 +377,8 @@ const MenuItem = async (req, res) => {
     food_type,
     price,
     description_food,
-    image_url // fallback for existing strings
+    image_url, // fallback for existing strings
+    available
   } = req.body;
 
   const cafeId = req.cafe.id;
@@ -406,7 +407,8 @@ const MenuItem = async (req, res) => {
       price,
       description_food,
       image_url: finalImageUrl,
-      cafe_owner: cafeId
+      cafe_owner: cafeId,
+      available: available === 'false' || available === false ? false : true
     });
 
     return res.status(201).json({
@@ -429,7 +431,8 @@ const EditMenuItem=async(req,res)=>{
     food_type,
     price,
     description_food,
-    image_url
+    image_url,
+    available
   } = req.body;
   const cafeId = req.cafe.id;
   const {id}=req.params
@@ -464,6 +467,7 @@ const EditMenuItem=async(req,res)=>{
     if (price !== undefined) menuItem.price = price;
     if (description_food !== undefined) menuItem.description_food = description_food;
     if (finalImageUrl !== undefined) menuItem.image_url = finalImageUrl;
+    if (available !== undefined) menuItem.available = available === 'false' || available === false ? false : true;
   
     await menuItem.save();
 
