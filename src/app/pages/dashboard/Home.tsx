@@ -16,7 +16,9 @@ export default function DashboardHome() {
         const mappedOrders = data
           .filter((o: any) => {
              const stat = (o.orderStatus || o.status || 'PENDING').toUpperCase();
-             return stat !== 'DRAFT';
+             // Only show orders that have paid the token or are further along
+             const paidStatuses = ['ACCEPTED', 'TOKEN_PAID', 'CONFIRMED', 'COMPLETED', 'CASH_COLLECTED', 'READY'];
+             return paidStatuses.includes(stat);
           })
           .map((o: any) => {
              const rawStat = (o.orderStatus || o.status || 'PENDING').toUpperCase();
