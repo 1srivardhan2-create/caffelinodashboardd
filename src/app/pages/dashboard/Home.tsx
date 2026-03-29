@@ -13,11 +13,12 @@ export default function DashboardHome() {
     try {
       const data = await api.get('/api/orders');
       if (Array.isArray(data)) {
-        const mappedOrders = data.map((o: any) => {
-             const rawStatus = (o.orderStatus || 'PENDING').toUpperCase();
-             let status: 'pending' | 'confirmed' | 'completed' = 'pending';
-             if (rawStatus === 'COMPLETED' || o.status === 'completed') status = 'completed';
-             else if (rawStatus !== 'PENDING') status = 'confirmed';
+        const mappedOrders = data
+          .filter((o: any) => {
+             const stat = (o.orderStatus || o.status || 'PENDING').toUpperCase();
+             return stat === 'COMPLETED';
+          })
+          .map((o: any) => {
              return {
                id: o._id,
                orderId: o.orderId || undefined,
@@ -32,7 +33,7 @@ export default function DashboardHome() {
                cgst: o.cgst || 0,
                sgst: o.sgst || 0,
                totalAmount: o.totalAmount || 0,
-               status,
+               status: 'completed',
                createdAt: new Date(o.createdAt),
                isDeleted: o.isDeleted || false
              };

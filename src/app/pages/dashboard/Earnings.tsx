@@ -14,15 +14,15 @@ export default function Earnings() {
 
   const fetchEarningsData = async () => {
     try {
-      const [earningsData, ordersData] = await Promise.all([
-        api.get('/api/earnings'),
-        api.get('/api/orders')
-      ]);
+      const ordersData = await api.get('/api/orders');
 
       let completedOrders: any[] = [];
       if (Array.isArray(ordersData)) {
         completedOrders = ordersData
-          .filter(o => o.orderStatus === 'COMPLETED' || o.status === 'completed' || o.orderStatus === 'completed')
+          .filter(o => {
+             const stat = (o.orderStatus || o.status || 'PENDING').toUpperCase();
+             return stat === 'COMPLETED';
+          })
           .map((o: any) => ({
              id: o._id,
              orderId: o.orderId || undefined,
@@ -37,10 +37,14 @@ export default function Earnings() {
           }));
       }
 
+      const totalRevenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+      const commission = totalRevenue * 0.06;
+      const totalEarnings = totalRevenue - commission;
+
       setEarnings({
-        totalAmount: earningsData.totalRevenue || 0,
-        commission: (earningsData.totalRevenue || 0) * 0.06,
-        finalAmount: earningsData.totalEarnings || 0,
+        totalAmount: totalRevenue,
+        commission: commission,
+        finalAmount: totalEarnings,
         completedOrders: completedOrders
       });
     } catch (e) {
