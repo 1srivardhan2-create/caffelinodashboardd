@@ -16,9 +16,17 @@ export default function DashboardHome() {
         const mappedOrders = data
           .filter((o: any) => {
              const stat = (o.orderStatus || o.status || 'PENDING').toUpperCase();
-             return stat === 'COMPLETED';
+             return stat !== 'DRAFT';
           })
           .map((o: any) => {
+             const rawStat = (o.orderStatus || o.status || 'PENDING').toUpperCase();
+             let feStatus = 'pending';
+             if (['COMPLETED', 'CASH_COLLECTED'].includes(rawStat)) {
+               feStatus = 'completed';
+             } else if (['ACCEPTED', 'CONFIRMED', 'TOKEN_PAID', 'READY'].includes(rawStat)) {
+               feStatus = 'confirmed';
+             }
+
              return {
                id: o._id,
                orderId: o.orderId || undefined,
@@ -33,7 +41,7 @@ export default function DashboardHome() {
                cgst: o.cgst || 0,
                sgst: o.sgst || 0,
                totalAmount: o.totalAmount || 0,
-               status: 'completed',
+               status: feStatus,
                createdAt: new Date(o.createdAt),
                isDeleted: o.isDeleted || false
              };
@@ -47,6 +55,8 @@ export default function DashboardHome() {
 
   useEffect(() => {
     fetchOrders();
+    const interval = setInterval(fetchOrders, 10000);
+    return () => clearInterval(interval);
   }, []);
   
   const activeOrders = orders.filter(o => !o.isDeleted);
