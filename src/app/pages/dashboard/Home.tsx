@@ -1,13 +1,32 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { ShoppingBag, Clock, DollarSign, CheckCircle2, CheckCircle, Package, Trash2, Undo2, Printer } from 'lucide-react';
+import { ShoppingBag, Clock, DollarSign, CheckCircle2, CheckCircle, Package, Trash2, Undo2, Printer, Power } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function DashboardHome() {
+  const { cafe, updateCafe } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState<boolean>(cafe?.isOpen !== false);
+  const [isToggling, setIsToggling] = useState(false);
+
+  const handleToggleOpen = async () => {
+    setIsToggling(true);
+    try {
+      const res = await api.patch('/api/cafe/toggle-open', {});
+      const newState = res.isOpen;
+      setIsOpen(newState);
+      updateCafe({ isOpen: newState });
+      toast.success(newState ? 'Café is now Open! Accepting orders.' : 'Café is now Closed.');
+    } catch (err) {
+      toast.error('Failed to toggle café status');
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -333,6 +352,44 @@ export default function DashboardHome() {
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
         <p className="text-sm md:text-base text-gray-600">Welcome back! Here's your cafe overview</p>
+      </div>
+
+      {/* Café Open/Close Toggle Card */}
+      <div className={`mb-6 md:mb-8 rounded-xl p-5 shadow-sm border transition-all duration-500 ${
+        isOpen 
+          ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200' 
+          : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl transition-colors duration-500 ${
+              isOpen ? 'bg-emerald-500 shadow-emerald-500/30 shadow-lg' : 'bg-red-500 shadow-red-500/30 shadow-lg'
+            }`}>
+              <Power className="size-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 text-lg">
+                {isOpen ? 'Your Café is Open' : 'Your Café is Closed'}
+              </h3>
+              <p className={`text-sm ${isOpen ? 'text-emerald-600' : 'text-red-600'}`}>
+                {isOpen ? 'Currently accepting orders from customers' : 'Not accepting orders right now'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleToggleOpen}
+            disabled={isToggling}
+            className={`relative w-16 h-8 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              isOpen 
+                ? 'bg-emerald-500 focus:ring-emerald-500' 
+                : 'bg-gray-300 focus:ring-gray-400'
+            } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <span className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+              isOpen ? 'translate-x-9' : 'translate-x-1'
+            }`} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">

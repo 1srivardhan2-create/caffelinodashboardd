@@ -31,7 +31,8 @@ const {
   restoreOrderDashboard,
   updateProfilePhoto,
   updateGalleryPhotos,
-  deleteGalleryPhoto
+  deleteGalleryPhoto,
+  toggleCafeOpen
 } = require("../controllers/cafe.controller");
 
 const upload = require("../middlewares/upload");
@@ -57,6 +58,7 @@ router.put("/editprofile", authCafe, cafeApproved, updateCafe);
 router.get("/cafedetail",authCafe, cafeApproved,getCafeById);
 router.get("/cafe/cafedetail", cafeApproved, getCafeById);
 router.delete("/delete/cafe",  authCafe,cafeApproved, deleteCafe);
+router.patch("/toggle-open", authCafe, cafeApproved, toggleCafeOpen);
 
 router.post("/menuItem/cafe", authCafe, cafeApproved, upload.single("image"), MenuItem);
 router.put("/menuItem/edit/:id", authCafe, cafeApproved, upload.single("image"), EditMenuItem);

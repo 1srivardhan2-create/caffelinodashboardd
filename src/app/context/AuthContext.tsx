@@ -25,6 +25,7 @@ export interface Cafe {
   galleryImages?: string[];
   status: 'pending_verification' | 'approved' | 'rejected' | boolean | string;
   profilePicture?: string;
+  isOpen?: boolean;
 }
 
 interface AuthContextType {
@@ -72,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             galleryImages: res.galleryImages,
             profilePicture: res.profilePicture,
             openingTime: res.openingTime,
-            closingTime: res.closingTime
+            closingTime: res.closingTime,
+            isOpen: res.isOpen !== false
           });
           // Also set a minimal user to show as authenticated
           setUser({
@@ -140,7 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           galleryImages: response.cafe.galleryImages,
           profilePicture: response.cafe.profilePicture,
           openingTime: response.cafe.openingTime,
-          closingTime: response.cafe.closingTime
+          closingTime: response.cafe.closingTime,
+          isOpen: response.cafe.isOpen !== false
         });
       }
       
@@ -171,7 +174,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           galleryImages: response.cafe.galleryImages,
           profilePicture: response.cafe.profilePicture,
           openingTime: response.cafe.openingTime,
-          closingTime: response.cafe.closingTime
+          closingTime: response.cafe.closingTime,
+          isOpen: response.cafe.isOpen !== false
         });
       } else {
         // Fallback if backend doesn't return full object immediately

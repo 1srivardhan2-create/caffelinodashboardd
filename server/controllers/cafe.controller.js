@@ -64,7 +64,8 @@ const googleLogin = async (req, res) => {
           galleryImages: cafe.Cafe_photos || [],
           profilePicture: cafe.Cafe_photos?.length > 0 ? cafe.Cafe_photos[0] : '',
           openingTime: cafe.opening_hours?.monday?.open || '',
-          closingTime: cafe.opening_hours?.monday?.close || ''
+          closingTime: cafe.opening_hours?.monday?.close || '',
+          isOpen: cafe.isOpen !== false
         },
         token
       });
@@ -108,7 +109,8 @@ const getCafeStatus = async (req, res) => {
       galleryImages: cafe.Cafe_photos || [],
       profilePicture: cafe.Cafe_photos?.length > 0 ? cafe.Cafe_photos[0] : '',
       openingTime: cafe.opening_hours?.monday?.open || '',
-      closingTime: cafe.opening_hours?.monday?.close || ''
+      closingTime: cafe.opening_hours?.monday?.close || '',
+      isOpen: cafe.isOpen !== false
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -242,7 +244,8 @@ const registerCafe = async (req, res) => {
         galleryImages: cafe.Cafe_photos || [],
         profilePicture: cafe.Cafe_photos?.length > 0 ? cafe.Cafe_photos[0] : '',
         openingTime: cafe.opening_hours?.monday?.open || '',
-        closingTime: cafe.opening_hours?.monday?.close || ''
+        closingTime: cafe.opening_hours?.monday?.close || '',
+        isOpen: cafe.isOpen !== false
       },
       token
     });
@@ -778,6 +781,12 @@ const createOrderUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid order payload" });
     }
 
+    // Guard: reject orders if café is closed
+    const cafeDoc = await Cafe.findById(cafeId);
+    if (cafeDoc && cafeDoc.isOpen === false) {
+      return res.status(403).json({ message: "This café is currently closed and not accepting orders." });
+    }
+
     // Creating a dummy User ObjectId because the backend requires a "user" ref.
     const dummyUserId = new mongoose.Types.ObjectId();
 
@@ -953,6 +962,25 @@ const deleteGalleryPhoto = async (req, res) => {
   }
 };
 
+const toggleCafeOpen = async (req, res) => {
+  try {
+    const cafeId = req.cafe.id;
+    const cafe = await Cafe.findById(cafeId);
+    if (!cafe) return res.status(404).json({ message: "Cafe not found" });
+
+    cafe.isOpen = !cafe.isOpen;
+    await cafe.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      message: cafe.isOpen ? "Cafe is now Open" : "Cafe is now Closed",
+      isOpen: cafe.isOpen
+    });
+  } catch (error) {
+    console.error("toggleCafeOpen error:", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = { registerCafe, Logincafe, approveCafe, googleLogin, getCafeStatus, updateCafe,deleteCafe,getCafeById,MenuItem,EditMenuItem,toggleMenuAvailability
   ,deleteItem,getItems,getItemById,getCafeOrders,updateOrderStatus,collectPayment,getCafeTotalAmount,getAllCafesAdmin,getApprovedCafesUser,getCafeDetailsUser,
-  createOrderUser, deleteOrderDashboard, restoreOrderDashboard, updateProfilePhoto, updateGalleryPhotos, deleteGalleryPhoto };
+  createOrderUser, deleteOrderDashboard, restoreOrderDashboard, updateProfilePhoto, updateGalleryPhotos, deleteGalleryPhoto, toggleCafeOpen };

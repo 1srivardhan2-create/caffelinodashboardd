@@ -5,7 +5,7 @@ import { optimizeCloudinaryUrl } from '../../../utils/cloudinary';
 import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Loader2, ArrowLeft, MapPin, Phone, Coffee, Clock, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { Loader2, ArrowLeft, MapPin, Phone, Coffee, Clock, Plus, Minus, ShoppingBag, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Cafe {
@@ -19,6 +19,7 @@ interface Cafe {
   AboutCafe: string;
   Phonenumber: string;
   opening_hours: any;
+  isOpen?: boolean;
 }
 
 interface MenuItem {
@@ -57,6 +58,8 @@ export default function CafeDetails() {
     };
     fetchCafeDetails();
   }, [id]);
+
+  const cafeIsOpen = cafe?.isOpen !== false;
 
   if (loading) {
     return (
@@ -107,6 +110,10 @@ export default function CafeDetails() {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+    if (!cafeIsOpen) {
+      toast.error('This café is currently closed and not accepting orders.');
+      return;
+    }
     setIsCheckingOut(true);
     try {
       const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://localhost:4000" : "https://caffelinodashboardd.onrender.com");
@@ -164,6 +171,19 @@ export default function CafeDetails() {
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{cafe.Name}</h1>
+              
+              {/* Open / Closed Indicator */}
+              {cafeIsOpen ? (
+                <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium mb-3">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  Open Now
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium mb-3">
+                  <XCircle className="w-4 h-4" />
+                  Currently Closed
+                </div>
+              )}
               <div className="flex flex-wrap gap-2 mb-4">
                 {cafe.Cafe_type.map((type, i) => (
                   <Badge key={i} variant="secondary" className="bg-gray-100 text-gray-700">
@@ -275,7 +295,9 @@ export default function CafeDetails() {
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <div className="font-bold text-gray-900">₹{item.price}</div>
-                        {item.available ? (
+                        {!cafeIsOpen ? (
+                          <Badge variant="secondary" className="bg-gray-100 text-gray-500 border-none shrink-0">Closed</Badge>
+                        ) : item.available ? (
                           <div className="flex items-center bg-orange-50 rounded-lg overflow-hidden border border-orange-200">
                             <button 
                               onClick={(e) => { e.stopPropagation(); updateCart(item, false); }}
