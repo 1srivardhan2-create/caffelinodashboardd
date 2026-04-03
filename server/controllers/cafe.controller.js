@@ -1,9 +1,9 @@
 const Cafe = require("../models/Cafe/Cafe_login");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const Menu=require("../models/Cafe/cafe_menu")
+const Menu = require("../models/Cafe/cafe_menu")
 const Order = require("../models/Cafe/Cafe_orders")
-const CashCollection=require("../models/Cafe/Collection_cafe")
+const CashCollection = require("../models/Cafe/Collection_cafe")
 const uploadBuffer = require("../utils/uploadToCloudinary");
 const mongoose = require("mongoose");
 
@@ -141,8 +141,8 @@ const registerCafe = async (req, res) => {
     } = req.body;
 
     if (!Name || !Cafe_Address || !Cafe_type ||
-        !Average_Cost || !managerName ||
-        !Phonenumber || !email_address_manager) {
+      !Average_Cost || !managerName ||
+      !Phonenumber || !email_address_manager) {
       return res.status(400).json({ message: "Fill all required fields" });
     }
 
@@ -281,7 +281,7 @@ const Logincafe = async (req, res) => {
 
     const token = jwt.sign({ id: cafe._id }, 'secret', { expiresIn: '1d' });
 
-    
+
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
@@ -355,21 +355,21 @@ const deleteCafe = async (req, res) => {
 };
 
 
-const getCafeById=async(req,res)=>{
-  try{
-const cafeId=req.cafe.id;
+const getCafeById = async (req, res) => {
+  try {
+    const cafeId = req.cafe.id;
 
-const cafe=await Cafe.findById(cafeId)
+    const cafe = await Cafe.findById(cafeId)
 
-if(!cafe){
-  return res.status(404).json({"message":"Cafe Not found"})
-}
+    if (!cafe) {
+      return res.status(404).json({ "message": "Cafe Not found" })
+    }
 
-return res.status(200).json({message:"Data retrieved",data:cafe})
+    return res.status(200).json({ message: "Data retrieved", data: cafe })
 
-  }catch(error){
+  } catch (error) {
     console.error(error)
-    return res.status(500).json({message:error.message})
+    return res.status(500).json({ message: error.message })
   }
 }
 
@@ -427,7 +427,7 @@ const MenuItem = async (req, res) => {
   }
 };
 
-const EditMenuItem=async(req,res)=>{
+const EditMenuItem = async (req, res) => {
   const {
     item_name,
     Category,
@@ -438,16 +438,16 @@ const EditMenuItem=async(req,res)=>{
     available
   } = req.body;
   const cafeId = req.cafe.id;
-  const {id}=req.params
-  try{
-  const cafe = await Cafe.findById(cafeId);
-  if(!cafe) return res.status(404).json({"message":"Cafe not found"})
-    const menuItem=await Menu.findOne({
-  _id:id,
-  cafe_owner:cafeId
+  const { id } = req.params
+  try {
+    const cafe = await Cafe.findById(cafeId);
+    if (!cafe) return res.status(404).json({ "message": "Cafe not found" })
+    const menuItem = await Menu.findOne({
+      _id: id,
+      cafe_owner: cafeId
     })
 
-     if (!menuItem) {
+    if (!menuItem) {
       return res.status(404).json({
         message: "Menu item not found or unauthorized"
       });
@@ -460,7 +460,7 @@ const EditMenuItem=async(req,res)=>{
       } catch (uploadError) {
         console.error("Cloudinary Error in EditMenuItem block:", uploadError.message);
         // Retain original image or fallback
-        finalImageUrl = menuItem.image_url; 
+        finalImageUrl = menuItem.image_url;
       }
     }
 
@@ -471,7 +471,7 @@ const EditMenuItem=async(req,res)=>{
     if (description_food !== undefined) menuItem.description_food = description_food;
     if (finalImageUrl !== undefined) menuItem.image_url = finalImageUrl;
     if (available !== undefined) menuItem.available = available === 'false' || available === false ? false : true;
-  
+
     await menuItem.save();
 
     return res.status(200).json({
@@ -479,8 +479,8 @@ const EditMenuItem=async(req,res)=>{
       data: menuItem
     });
 
-  }catch(error){
-     console.error(error);
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: error.message || "Server error"
     });
@@ -576,7 +576,7 @@ const getItems = async (req, res) => {
     const cafeId = req.cafe.id; // from JWT cookie
 
     const items = await Menu.find({ cafe_owner: cafeId })
-      .sort({ createdAt: -1 }).populate("cafe_owner","Name  Cafe_Address cafe_location Cafe_type Average_Cost AboutCafe  managerName Phonenumber designation AlternateContact email_address_manager paymentMethods opening_hours");
+      .sort({ createdAt: -1 }).populate("cafe_owner", "Name  Cafe_Address cafe_location Cafe_type Average_Cost AboutCafe  managerName Phonenumber designation AlternateContact email_address_manager paymentMethods opening_hours");
 
     return res.status(200).json(items);
   } catch (error) {
@@ -981,6 +981,8 @@ const toggleCafeOpen = async (req, res) => {
   }
 };
 
-module.exports = { registerCafe, Logincafe, approveCafe, googleLogin, getCafeStatus, updateCafe,deleteCafe,getCafeById,MenuItem,EditMenuItem,toggleMenuAvailability
-  ,deleteItem,getItems,getItemById,getCafeOrders,updateOrderStatus,collectPayment,getCafeTotalAmount,getAllCafesAdmin,getApprovedCafesUser,getCafeDetailsUser,
-  createOrderUser, deleteOrderDashboard, restoreOrderDashboard, updateProfilePhoto, updateGalleryPhotos, deleteGalleryPhoto, toggleCafeOpen };
+module.exports = {
+  registerCafe, Logincafe, approveCafe, googleLogin, getCafeStatus, updateCafe, deleteCafe, getCafeById, MenuItem, EditMenuItem, toggleMenuAvailability
+  , deleteItem, getItems, getItemById, getCafeOrders, updateOrderStatus, collectPayment, getCafeTotalAmount, getAllCafesAdmin, getApprovedCafesUser, getCafeDetailsUser,
+  createOrderUser, deleteOrderDashboard, restoreOrderDashboard, updateProfilePhoto, updateGalleryPhotos, deleteGalleryPhoto, toggleCafeOpen
+};
