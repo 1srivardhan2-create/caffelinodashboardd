@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '../../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -11,23 +12,52 @@ export default function Profile() {
   const { cafe, updateCafe } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: cafe?.name || '',
-    address: cafe?.address || '',
-    openingTime: cafe?.openingTime || '',
-    closingTime: cafe?.closingTime || '',
-    managerName: cafe?.managerName || '',
-    managerPhone: cafe?.managerPhone || '',
-    costPerPerson: cafe?.costPerPerson || ''
+    name: '',
+    address: '',
+    openingTime: '',
+    closingTime: '',
+    managerName: '',
+    managerPhone: '',
+    costPerPerson: ''
   });
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (cafe) {
+      setFormData({
+        name: cafe.name || '',
+        address: cafe.address || '',
+        openingTime: cafe.openingTime || '',
+        closingTime: cafe.closingTime || '',
+        managerName: cafe.managerName || '',
+        managerPhone: cafe.managerPhone || '',
+        costPerPerson: cafe.costPerPerson || ''
+      });
+    }
+  }, [cafe]);
+
+  const handleSave = async () => {
     if (formData.managerPhone && formData.managerPhone.length !== 10) {
       toast.error('Phone number must be exactly 10 digits');
       return;
     }
-    updateCafe(formData);
-    setIsEditing(false);
-    toast.success('Profile updated successfully!');
+
+    try {
+      await api.put('/api/cafe/editprofile', {
+        name: formData.name,
+        address: formData.address,
+        openingTime: formData.openingTime,
+        closingTime: formData.closingTime,
+        managerName: formData.managerName,
+        managerPhone: formData.managerPhone,
+        averageCostPerPerson: Number(formData.costPerPerson) || formData.costPerPerson
+      });
+
+      updateCafe(formData);
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      toast.error('Failed to update profile. Please try again.');
+    }
   };
 
   const handleCancel = () => {

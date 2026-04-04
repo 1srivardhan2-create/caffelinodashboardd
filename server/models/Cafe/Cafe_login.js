@@ -7,6 +7,7 @@ const Cafe_log = new mongoose.Schema(
     cafe_location: { type: String, required: true },
     Cafe_type: { type: [String], required: true },
     Average_Cost: { type: String, required: true },
+    averageCostPerPerson: { type: Number },
     AboutCafe: { type: String, minlength: 10 },
     password:{
         type:String,
