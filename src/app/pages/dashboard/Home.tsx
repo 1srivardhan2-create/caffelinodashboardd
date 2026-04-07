@@ -62,6 +62,7 @@ export default function DashboardHome() {
                cgst: o.cgst || 0,
                sgst: o.sgst || 0,
                totalAmount: o.totalAmount || 0,
+               memberCount: o.memberCount || (o.members?.length > 0 ? o.members.length : undefined),
                status: feStatus,
                createdAt: new Date(o.createdAt),
                isDeleted: o.isDeleted || false
@@ -118,7 +119,8 @@ export default function DashboardHome() {
             Order #${order.orderId || order.id.slice(-6)}
           </div>
           ${order.userName ? `<div style="font-size: 14px; margin-bottom: 5px;">Customer: ${order.userName}</div>` : ''}
-          <div style="font-size: 14px; margin-bottom: 15px;">Date: ${new Date(order.createdAt).toLocaleString()}</div>
+          ${order.memberCount ? `<div style="font-size: 14px; margin-bottom: 5px;">Members: ${order.memberCount}</div>` : ''}
+          <div style="font-size: 14px; margin-bottom: 15px;">Date & Time: ${new Date(order.createdAt).toLocaleString()}</div>
           
           <div class="divider"></div>
           ${itemsHtml}
@@ -238,11 +240,11 @@ export default function DashboardHome() {
             </CardTitle>
             {order.userName && (
               <p className="text-sm font-medium text-orange-600 mt-0.5">
-                Customer: {order.userName}
+                Customer: {order.userName} {order.memberCount ? `| Members: ${order.memberCount}` : ''}
               </p>
             )}
             <p className="text-sm text-gray-600">
-              {new Date(order.createdAt).toLocaleTimeString()}
+              {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -354,43 +356,6 @@ export default function DashboardHome() {
         <p className="text-sm md:text-base text-gray-600">Welcome back! Here's your cafe overview</p>
       </div>
 
-      {/* Café Open/Close Toggle Card */}
-      <div className={`mb-6 md:mb-8 rounded-xl p-5 shadow-sm border transition-all duration-500 ${
-        isOpen 
-          ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200' 
-          : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'
-      }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl transition-colors duration-500 ${
-              isOpen ? 'bg-emerald-500 shadow-emerald-500/30 shadow-lg' : 'bg-red-500 shadow-red-500/30 shadow-lg'
-            }`}>
-              <Power className="size-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-lg">
-                {isOpen ? 'Your Café is Open' : 'Your Café is Closed'}
-              </h3>
-              <p className={`text-sm ${isOpen ? 'text-emerald-600' : 'text-red-600'}`}>
-                {isOpen ? 'Currently accepting orders from customers' : 'Not accepting orders right now'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleToggleOpen}
-            disabled={isToggling}
-            className={`relative w-16 h-8 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              isOpen 
-                ? 'bg-emerald-500 focus:ring-emerald-500' 
-                : 'bg-gray-300 focus:ring-gray-400'
-            } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            <span className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
-              isOpen ? 'translate-x-9' : 'translate-x-1'
-            }`} />
-          </button>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
         {stats.map((stat, index) => {
