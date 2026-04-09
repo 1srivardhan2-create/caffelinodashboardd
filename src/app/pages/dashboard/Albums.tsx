@@ -8,7 +8,7 @@ import { Image as ImageIcon, Pencil, Save, X, Upload, Trash2, Plus, Loader2 } fr
 
 export default function Albums() {
   const { cafe, updateCafe } = useAuth();
-  
+
   // UI State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingGallery, setIsEditingGallery] = useState(false);
@@ -18,7 +18,7 @@ export default function Albums() {
   // Preview URLs
   const [tempProfilePicture, setTempProfilePicture] = useState('');
   const [tempGalleryImages, setTempGalleryImages] = useState<string[]>([]);
-  
+
   // Actual File objects for upload
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
@@ -61,7 +61,7 @@ export default function Albums() {
 
   const handleGalleryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
     const newPreviewUrls: string[] = [];
     const newFiles: File[] = [];
@@ -83,15 +83,20 @@ export default function Albums() {
       newPreviewUrls.push(URL.createObjectURL(file));
     }
 
-    setGalleryFiles([...galleryFiles, ...newFiles]);
-    setTempGalleryImages([...tempGalleryImages, ...newPreviewUrls]);
-    toast.success(`${newFiles.length} image(s) attached`);
+    if (newFiles.length > 0) {
+      setGalleryFiles(prev => [...prev, ...newFiles]);
+      setTempGalleryImages(prev => [...prev, ...newPreviewUrls]);
+      toast.success(`${newFiles.length} image(s) attached`);
+    }
+
+    // Reset the input so the same file(s) can be re-selected
+    e.target.value = '';
   };
 
   const handleDeleteGalleryImage = async (index: number) => {
     // If it's a new unsaved file
     const existingImagesCount = cafe.galleryImages?.length || 0;
-    
+
     if (index >= existingImagesCount) {
       // Remove from pending files
       const localIndex = index - existingImagesCount;
@@ -122,10 +127,10 @@ export default function Albums() {
     try {
       const formData = new FormData();
       formData.append('profile_picture', profileFile);
-      
+
       const res = await api.postForm('/api/cafe/albums/profile', formData);
       updateCafe({ profilePicture: res.profilePicture, galleryImages: res.galleryImages });
-      
+
       setIsEditingProfile(false);
       setProfileFile(null);
       toast.success(res.message || 'Profile photo updated!');
@@ -148,10 +153,10 @@ export default function Albums() {
       galleryFiles.forEach(file => {
         formData.append('gallery_images', file);
       });
-      
+
       const res = await api.postForm('/api/cafe/albums/gallery', formData);
       updateCafe({ galleryImages: res.galleryImages, profilePicture: res.profilePicture });
-      
+
       setTempGalleryImages(res.galleryImages);
       setGalleryFiles([]);
       setIsEditingGallery(false);
@@ -202,8 +207,8 @@ export default function Albums() {
                   <X className="mr-2 size-4" />
                   Cancel
                 </Button>
-                <Button 
-                  className="bg-orange-500 hover:bg-orange-600" 
+                <Button
+                  className="bg-orange-500 hover:bg-orange-600"
                   size="sm"
                   onClick={handleSaveProfile}
                   disabled={isSavingProfile}
@@ -292,8 +297,8 @@ export default function Albums() {
                   <X className="mr-2 size-4" />
                   Cancel
                 </Button>
-                <Button 
-                  className="bg-orange-500 hover:bg-orange-600" 
+                <Button
+                  className="bg-orange-500 hover:bg-orange-600"
                   size="sm"
                   onClick={handleSaveGallery}
                   disabled={isSavingGallery}
@@ -343,7 +348,7 @@ export default function Albums() {
                     </div>
                   </div>
                 ) : (
-                  <div 
+                  <div
                     onClick={() => galleryInputRef.current?.click()}
                     className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:bg-gray-100 transition-colors"
                   >

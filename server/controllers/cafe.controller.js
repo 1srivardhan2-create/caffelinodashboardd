@@ -938,16 +938,17 @@ const updateGalleryPhotos = async (req, res) => {
       return res.status(500).json({ message: "All image uploads failed" });
     }
 
-    // Append new photos to existing gallery
-    if (!cafe.Cafe_photos) cafe.Cafe_photos = [];
-    cafe.Cafe_photos = [...cafe.Cafe_photos, ...uploadedUrls];
-
-    await cafe.save({ validateBeforeSave: false });
+    // Append new photos using $push to avoid full document validation
+    const updatedCafe = await Cafe.findByIdAndUpdate(
+      cafeId,
+      { $push: { Cafe_photos: { $each: uploadedUrls } } },
+      { new: true, runValidators: false }
+    );
 
     return res.status(200).json({
       message: `${uploadedUrls.length} photo(s) added to gallery`,
-      galleryImages: cafe.Cafe_photos,
-      profilePicture: cafe.Cafe_photos[0] || ''
+      galleryImages: updatedCafe.Cafe_photos,
+      profilePicture: updatedCafe.Cafe_photos[0] || ''
     });
 
   } catch (error) {
