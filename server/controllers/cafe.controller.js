@@ -306,7 +306,25 @@ const updateCafe = async (req, res) => {
     const cafe = await Cafe.findById(req.cafe.id);
     if (!cafe) return res.status(404).json({ message: "Cafe not found" });
 
-    Object.assign(cafe, req.body);
+    if (req.body.name) cafe.Name = req.body.name;
+    if (req.body.address) cafe.Cafe_Address = req.body.address;
+    if (req.body.managerName) cafe.managerName = req.body.managerName;
+    if (req.body.managerPhone) cafe.Phonenumber = req.body.managerPhone;
+    if (req.body.averageCostPerPerson) {
+      cafe.averageCostPerPerson = Number(req.body.averageCostPerPerson);
+      cafe.Average_Cost = String(req.body.averageCostPerPerson);
+    }
+
+    if (req.body.openingTime || req.body.closingTime) {
+      if (!cafe.opening_hours) {
+        cafe.opening_hours = { monday: { open: "09:00", close: "22:00", closed: false } };
+      } else if (!cafe.opening_hours.monday) {
+        cafe.opening_hours.monday = { open: "09:00", close: "22:00", closed: false };
+      }
+
+      if (req.body.openingTime) cafe.opening_hours.monday.open = req.body.openingTime;
+      if (req.body.closingTime) cafe.opening_hours.monday.close = req.body.closingTime;
+    }
 
     if (req.body.password) {
       cafe.password = await bcrypt.hash(req.body.password, 10);
