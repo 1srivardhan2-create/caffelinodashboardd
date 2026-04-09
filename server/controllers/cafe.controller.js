@@ -306,28 +306,26 @@ const updateCafe = async (req, res) => {
     const cafe = await Cafe.findById(req.cafe.id);
     if (!cafe) return res.status(404).json({ message: "Cafe not found" });
 
-    if (req.body.name) cafe.Name = req.body.name;
-    if (req.body.address) cafe.Cafe_Address = req.body.address;
-    if (req.body.managerName) cafe.managerName = req.body.managerName;
-    if (req.body.managerPhone) cafe.Phonenumber = req.body.managerPhone;
+    console.log("Updating cafe with req.body:", req.body);
+
+    const updateData = {};
+
+    if (req.body.name) updateData.Name = req.body.name;
+    if (req.body.address) updateData.Cafe_Address = req.body.address;
+    if (req.body.managerName) updateData.managerName = req.body.managerName;
+    if (req.body.managerPhone) updateData.Phonenumber = req.body.managerPhone;
     if (req.body.averageCostPerPerson) {
-      cafe.averageCostPerPerson = Number(req.body.averageCostPerPerson);
-      cafe.Average_Cost = String(req.body.averageCostPerPerson);
+      updateData.averageCostPerPerson = Number(req.body.averageCostPerPerson);
+      updateData.Average_Cost = String(req.body.averageCostPerPerson);
     }
 
     if (req.body.openingTime || req.body.closingTime) {
-      if (!cafe.opening_hours) {
-        cafe.opening_hours = { monday: { open: "09:00", close: "22:00", closed: false } };
-      } else if (!cafe.opening_hours.monday) {
-        cafe.opening_hours.monday = { open: "09:00", close: "22:00", closed: false };
-      }
-
-      if (req.body.openingTime) cafe.opening_hours.monday.open = req.body.openingTime;
-      if (req.body.closingTime) cafe.opening_hours.monday.close = req.body.closingTime;
+      updateData['opening_hours.monday.open'] = req.body.openingTime || cafe.opening_hours?.monday?.open || "09:00";
+      updateData['opening_hours.monday.close'] = req.body.closingTime || cafe.opening_hours?.monday?.close || "22:00";
     }
 
     if (req.body.password) {
-      cafe.password = await bcrypt.hash(req.body.password, 10);
+      updateData.password = await bcrypt.hash(req.body.password, 10);
     }
 
     if (req.files?.Cafe_photos) {
@@ -335,25 +333,30 @@ const updateCafe = async (req, res) => {
       for (const file of req.files.Cafe_photos) {
         photos.push(await uploadBuffer(file.buffer, "cafes/photos"));
       }
-      if (photos.length < 5)
-        return res.status(400).json({ message: "Minimum 5 cafe photos required" });
-
-      cafe.Cafe_photos = photos;
+      if (photos.length < 4) {
+        return res.status(400).json({ message: "Minimum 4 cafe photos required" });
+      }
+      updateData.Cafe_photos = photos;
     }
 
     if (req.files?.upi_photo) {
-      cafe.upi_photo = await uploadBuffer(
+      updateData.upi_photo = await uploadBuffer(
         req.files.upi_photo[0].buffer,
         "cafes/upi"
       );
     }
 
-    await cafe.save();
+    const updatedCafe = await Cafe.findByIdAndUpdate(
+      req.cafe.id,
+      { $set: updateData },
+      { new: true, runValidators: false }
+    );
 
-    const { password, ...safeCafe } = cafe.toObject();
+    const { password, ...safeCafe } = updatedCafe.toObject();
     res.status(200).json({ message: "Cafe updated", cafe: safeCafe });
 
   } catch (error) {
+    console.error("Update cafe error:", error);
     res.status(500).json({ message: error.message });
   }
 };
