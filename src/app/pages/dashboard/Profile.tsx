@@ -6,11 +6,14 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { toast } from 'sonner';
-import { Pencil, Save, X, MapPin, Clock, Phone, User, Mail } from 'lucide-react';
+import { Pencil, Save, X, MapPin, Clock, Phone, User, Mail, QrCode, Search, ExternalLink, CheckCircle } from 'lucide-react';
 
 export default function Profile() {
   const { cafe, updateCafe } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [qrInput, setQrInput] = useState('');
+  const [qrResult, setQrResult] = useState<any>(null);
+  const [qrLoading, setQrLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -71,6 +74,42 @@ export default function Profile() {
       costPerPerson: cafe?.costPerPerson || ''
     });
     setIsEditing(false);
+  };
+
+  const handleQrLookup = async () => {
+    if (!qrInput.trim()) {
+      toast.error('Enter an Order ID or URL');
+      return;
+    }
+
+    setQrLoading(true);
+    setQrResult(null);
+
+    try {
+      // Extract order ID from URL or use raw input
+      let orderId = qrInput.trim();
+      // Handle full URLs like https://caffelino.in/order/423700
+      const urlMatch = orderId.match(/\/order\/([a-zA-Z0-9]+)/);
+      if (urlMatch) {
+        orderId = urlMatch[1];
+      }
+
+      const data = await api.get(`/api/orders/${orderId}`);
+      if (data.success && data.order) {
+        setQrResult(data.order);
+        toast.success('Order found!');
+      } else {
+        toast.error(data.message || 'Order not found');
+      }
+    } catch (err) {
+      toast.error('Failed to look up order');
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  const handleOpenOrderPage = (orderId: string) => {
+    window.open(`/order/${orderId}`, '_blank');
   };
 
   if (!cafe) return null;
@@ -273,6 +312,88 @@ export default function Profile() {
                  cafe.status === 'pending_verification' ? 'Pending' :
                  'Rejected'}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* QR Scanner / Order Lookup */}
+          <Card className="border-orange-200 shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-orange-600">
+                <QrCode className="size-5" />
+                QR Order Lookup
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                Scan or paste QR code / Order ID to verify orders
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Order ID or QR URL"
+                  value={qrInput}
+                  onChange={e => setQrInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleQrLookup()}
+                  className="text-sm"
+                />
+                <Button
+                  size="sm"
+                  className="bg-orange-500 hover:bg-orange-600 px-3 shrink-0"
+                  onClick={handleQrLookup}
+                  disabled={qrLoading}
+                >
+                  {qrLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  ) : (
+                    <Search className="size-4" />
+                  )}
+                </Button>
+              </div>
+
+              <p className="text-xs text-gray-400 text-center">
+                Paste URL like: caffelino.in/order/abc123
+              </p>
+
+              {/* QR Result */}
+              {qrResult && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                  <div className="flex items-center gap-2 text-green-700 font-semibold text-sm">
+                    <CheckCircle className="size-4" />
+                    Order Found
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <p className="font-medium text-gray-800">
+                      Order #{qrResult.orderId || qrResult._id?.slice(-6)}
+                    </p>
+                    {qrResult.cafeName && (
+                      <p className="text-gray-600 text-xs">Cafe: {qrResult.cafeName}</p>
+                    )}
+                    <div className="flex justify-between text-gray-700">
+                      <span>Items:</span>
+                      <span>{qrResult.items?.length || 0}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-700 font-bold">
+                      <span>Total:</span>
+                      <span>₹{qrResult.totalAmount?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600 text-xs">
+                      <span>Status:</span>
+                      <span className="uppercase font-medium">{qrResult.orderStatus || qrResult.status}</span>
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                      {new Date(qrResult.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+                    onClick={() => handleOpenOrderPage(qrResult._id)}
+                  >
+                    <ExternalLink className="mr-2 size-3" />
+                    View Full Details
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

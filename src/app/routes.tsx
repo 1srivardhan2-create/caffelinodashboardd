@@ -12,6 +12,7 @@ import Albums from './pages/dashboard/Albums';
 import AdminApproval from './pages/dashboard/AdminApproval';
 import UserHome from './pages/user/UserHome';
 import CafeDetails from './pages/user/CafeDetails';
+import OrderDetails from './pages/OrderDetails';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, cafe, loading } = useAuth();
@@ -119,5 +120,10 @@ export const router = createBrowserRouter([
   {
     path: '/app/cafe/:id',
     element: <CafeDetails />
+  },
+  // Public order details page — opens when QR code on bill is scanned
+  {
+    path: '/order/:id',
+    element: <OrderDetails />
   }
 ]);

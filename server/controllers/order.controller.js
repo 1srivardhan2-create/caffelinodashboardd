@@ -93,3 +93,36 @@ exports.completeOrder = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Public endpoint — fetch single order by ID (used when QR code is scanned)
+exports.getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Also try to get cafe name for display
+    let cafeName = '';
+    try {
+      const Cafe = require("../models/Cafe/Cafe_login");
+      const cafeDoc = await Cafe.findById(order.cafe || order.cafeId);
+      if (cafeDoc) cafeName = cafeDoc.Name || '';
+    } catch (e) {
+      // Cafe lookup is optional, don't fail the request
+    }
+
+    res.json({
+      success: true,
+      order: {
+        ...order.toObject(),
+        cafeName: cafeName || order.cafeName || ''
+      }
+    });
+  } catch (err) {
+    console.error("Get order by ID error:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch order" });
+  }
+};
