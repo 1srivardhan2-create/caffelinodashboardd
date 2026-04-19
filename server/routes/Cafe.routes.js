@@ -32,7 +32,10 @@ const {
   updateProfilePhoto,
   updateGalleryPhotos,
   deleteGalleryPhoto,
-  toggleCafeOpen
+  toggleCafeOpen,
+  uploadQR,
+  getQR,
+  deleteQR
 } = require("../controllers/cafe.controller");
 
 const upload = require("../middlewares/upload");
@@ -79,6 +82,11 @@ router.patch("/orders/:orderId/restore", authCafe, cafeApproved, restoreOrderDas
 router.post("/albums/profile", authCafe, cafeApproved, upload.single("profile_picture"), updateProfilePhoto);
 router.post("/albums/gallery", authCafe, cafeApproved, upload.array("gallery_images", 50), updateGalleryPhotos);
 router.delete("/albums/gallery/:index", authCafe, cafeApproved, deleteGalleryPhoto);
+
+// QR Code management
+router.post("/qr/upload", authCafe, cafeApproved, upload.single("qr"), uploadQR);
+router.get("/qr", authCafe, cafeApproved, getQR);
+router.delete("/qr", authCafe, cafeApproved, deleteQR);
 
 router.get("/dashboard", authCafe, cafeApproved, (req, res) => {
   res.json({ message: "Welcome to cafe dashboard" });

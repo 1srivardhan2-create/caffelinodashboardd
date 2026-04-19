@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
@@ -6,14 +6,11 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { toast } from 'sonner';
-import { Pencil, Save, X, MapPin, Clock, Phone, User, Mail, QrCode, Search, ExternalLink, CheckCircle, CreditCard } from 'lucide-react';
+import { Pencil, Save, X, MapPin, Clock, Phone, User, Mail, QrCode, Upload, Trash2, RefreshCw } from 'lucide-react';
 
 export default function Profile() {
   const { cafe, updateCafe } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [qrInput, setQrInput] = useState('');
-  const [qrResult, setQrResult] = useState<any>(null);
-  const [qrLoading, setQrLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -21,9 +18,15 @@ export default function Profile() {
     closingTime: '',
     managerName: '',
     managerPhone: '',
-    costPerPerson: '',
-    upiId: ''
+    costPerPerson: ''
   });
+
+  // QR State
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [qrUploading, setQrUploading] = useState(false);
+  const [qrDeleting, setQrDeleting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const qrInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (cafe) {
@@ -34,11 +37,96 @@ export default function Profile() {
         closingTime: cafe.closingTime || '',
         managerName: cafe.managerName || '',
         managerPhone: cafe.managerPhone || '',
-        costPerPerson: cafe.costPerPerson || '',
-        upiId: cafe.upiId || ''
+        costPerPerson: cafe.costPerPerson || ''
       });
+      if (cafe.upiPhoto) {
+        setQrUrl(cafe.upiPhoto);
+      }
     }
   }, [cafe]);
+
+  // Fetch QR on mount (in case auth context didn't have it yet)
+  useEffect(() => {
+    const fetchQR = async () => {
+      try {
+        const res = await api.get('/api/cafe/qr');
+        if (res.upiPhoto) {
+          setQrUrl(res.upiPhoto);
+          updateCafe({ upiPhoto: res.upiPhoto });
+        }
+      } catch (err) {
+        // Silently fail — QR may not exist yet
+      }
+    };
+    fetchQR();
+  }, []);
+
+  const handleQRUpload = async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (PNG, JPG, etc.)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image too large. Max 5MB allowed.');
+      return;
+    }
+
+    setQrUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('qr', file);
+
+      const res = await api.postForm('/api/cafe/qr/upload', formData);
+
+      if (res.upiPhoto) {
+        setQrUrl(res.upiPhoto);
+        updateCafe({ upiPhoto: res.upiPhoto });
+        toast.success('QR code uploaded successfully!');
+      } else {
+        toast.error(res.message || 'Failed to upload QR');
+      }
+    } catch (err) {
+      toast.error('Failed to upload QR code');
+    } finally {
+      setQrUploading(false);
+    }
+  };
+
+  const handleQRDelete = async () => {
+    setQrDeleting(true);
+    try {
+      await api.delete('/api/cafe/qr');
+      setQrUrl(null);
+      updateCafe({ upiPhoto: '' });
+      toast.success('QR code removed');
+    } catch (err) {
+      toast.error('Failed to remove QR code');
+    } finally {
+      setQrDeleting(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleQRUpload(file);
+  };
 
   const handleSave = async () => {
     if (formData.managerPhone && formData.managerPhone.length !== 10) {
@@ -54,8 +142,7 @@ export default function Profile() {
         closingTime: formData.closingTime,
         managerName: formData.managerName,
         managerPhone: formData.managerPhone,
-        averageCostPerPerson: Number(formData.costPerPerson) || formData.costPerPerson,
-        upiId: formData.upiId
+        averageCostPerPerson: Number(formData.costPerPerson) || formData.costPerPerson
       });
 
       updateCafe(formData);
@@ -74,46 +161,9 @@ export default function Profile() {
       closingTime: cafe?.closingTime || '',
       managerName: cafe?.managerName || '',
       managerPhone: cafe?.managerPhone || '',
-      costPerPerson: cafe?.costPerPerson || '',
-      upiId: cafe?.upiId || ''
+      costPerPerson: cafe?.costPerPerson || ''
     });
     setIsEditing(false);
-  };
-
-  const handleQrLookup = async () => {
-    if (!qrInput.trim()) {
-      toast.error('Enter an Order ID or URL');
-      return;
-    }
-
-    setQrLoading(true);
-    setQrResult(null);
-
-    try {
-      // Extract order ID from URL or use raw input
-      let orderId = qrInput.trim();
-      // Handle full URLs like https://caffelino.in/order/423700
-      const urlMatch = orderId.match(/\/order\/([a-zA-Z0-9]+)/);
-      if (urlMatch) {
-        orderId = urlMatch[1];
-      }
-
-      const data = await api.get(`/api/orders/${orderId}`);
-      if (data.success && data.order) {
-        setQrResult(data.order);
-        toast.success('Order found!');
-      } else {
-        toast.error(data.message || 'Order not found');
-      }
-    } catch (err) {
-      toast.error('Failed to look up order');
-    } finally {
-      setQrLoading(false);
-    }
-  };
-
-  const handleOpenOrderPage = (orderId: string) => {
-    window.open(`/order/${orderId}`, '_blank');
   };
 
   if (!cafe) return null;
@@ -233,36 +283,6 @@ export default function Profile() {
                   <p className="font-medium text-lg text-orange-600">₹{cafe.costPerPerson || 'N/A'}</p>
                 )}
               </div>
-
-              {/* UPI ID */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <CreditCard className="size-4 text-purple-500" />
-                  UPI ID (for Payment QR)
-                </Label>
-                {isEditing ? (
-                  <>
-                    <Input
-                      value={formData.upiId}
-                      onChange={e => setFormData({ ...formData, upiId: e.target.value })}
-                      placeholder="e.g. caffelino@okaxis"
-                    />
-                    <p className="text-xs text-gray-500">
-                      This UPI ID will appear on every printed bill for instant payment
-                    </p>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {cafe.upiId ? (
-                      <p className="font-medium text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
-                        {cafe.upiId}
-                      </p>
-                    ) : (
-                      <p className="text-gray-400 italic text-sm">Not set — Edit profile to add UPI ID</p>
-                    )}
-                  </div>
-                )}
-              </div>
             </CardContent>
           </Card>
 
@@ -349,85 +369,118 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          {/* QR Scanner / Order Lookup */}
-          <Card className="border-orange-200 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-orange-600">
-                <QrCode className="size-5" />
-                QR Order Lookup
-              </CardTitle>
-              <p className="text-xs text-gray-500 mt-1">
-                Scan or paste QR code / Order ID to verify orders
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Order ID or QR URL"
-                  value={qrInput}
-                  onChange={e => setQrInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleQrLookup()}
-                  className="text-sm"
-                />
-                <Button
-                  size="sm"
-                  className="bg-orange-500 hover:bg-orange-600 px-3 shrink-0"
-                  onClick={handleQrLookup}
-                  disabled={qrLoading}
-                >
-                  {qrLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  ) : (
-                    <Search className="size-4" />
-                  )}
-                </Button>
+          {/* QR Code Management */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <QrCode className="size-5 text-orange-500" />
+                <CardTitle>Payment QR Code</CardTitle>
               </div>
-
-              <p className="text-xs text-gray-400 text-center">
-                Paste URL like: caffelino.in/order/abc123
-              </p>
-
-              {/* QR Result */}
-              {qrResult && (
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
-                  <div className="flex items-center gap-2 text-green-700 font-semibold text-sm">
-                    <CheckCircle className="size-4" />
-                    Order Found
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <p className="font-medium text-gray-800">
-                      Order #{qrResult.orderId || qrResult._id?.slice(-6)}
-                    </p>
-                    {qrResult.cafeName && (
-                      <p className="text-gray-600 text-xs">Cafe: {qrResult.cafeName}</p>
-                    )}
-                    <div className="flex justify-between text-gray-700">
-                      <span>Items:</span>
-                      <span>{qrResult.items?.length || 0}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-700 font-bold">
-                      <span>Total:</span>
-                      <span>₹{qrResult.totalAmount?.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600 text-xs">
-                      <span>Status:</span>
-                      <span className="uppercase font-medium">{qrResult.orderStatus || qrResult.status}</span>
-                    </div>
-                    <div className="text-gray-500 text-xs">
-                      {new Date(qrResult.createdAt).toLocaleString()}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {qrUrl ? (
+                <>
+                  {/* QR Preview */}
+                  <div className="relative group">
+                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 bg-white flex flex-col items-center">
+                      <img
+                        src={qrUrl}
+                        alt="Payment QR Code"
+                        className="w-full max-w-[200px] h-auto rounded-lg shadow-sm"
+                        style={{ imageRendering: 'pixelated' }}
+                      />
+                      <p className="text-xs text-gray-500 mt-3 text-center">
+                        This QR appears on printed bills
+                      </p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full mt-2 text-orange-600 border-orange-300 hover:bg-orange-50"
-                    onClick={() => handleOpenOrderPage(qrResult._id)}
-                  >
-                    <ExternalLink className="mr-2 size-3" />
-                    View Full Details
-                  </Button>
+
+                  {/* QR Actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 text-sm"
+                      onClick={() => qrInputRef.current?.click()}
+                      disabled={qrUploading}
+                    >
+                      {qrUploading ? (
+                        <RefreshCw className="mr-1 size-3 animate-spin" />
+                      ) : (
+                        <Upload className="mr-1 size-3" />
+                      )}
+                      Replace
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-sm text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                      onClick={handleQRDelete}
+                      disabled={qrDeleting}
+                    >
+                      {qrDeleting ? (
+                        <RefreshCw className="mr-1 size-3 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-1 size-3" />
+                      )}
+                      Remove
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                /* Upload Zone */
+                <div
+                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200
+                    ${isDragging
+                      ? 'border-orange-400 bg-orange-50 scale-[1.02]'
+                      : 'border-gray-300 hover:border-orange-300 hover:bg-orange-50/50'
+                    }
+                  `}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => qrInputRef.current?.click()}
+                >
+                  {qrUploading ? (
+                    <div className="flex flex-col items-center gap-2 py-4">
+                      <RefreshCw className="size-8 text-orange-500 animate-spin" />
+                      <p className="text-sm text-gray-600">Uploading...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 py-4">
+                      <div className="bg-orange-100 p-3 rounded-full">
+                        <QrCode className="size-8 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">
+                          Upload UPI QR Code
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Drag & drop or click to browse
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          PNG, JPG up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* Hidden file input */}
+              <input
+                ref={qrInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleQRUpload(file);
+                  e.target.value = '';
+                }}
+              />
+
+              <p className="text-xs text-gray-400 text-center">
+                This QR will be shown on receipts for "Scan & Pay"
+              </p>
             </CardContent>
           </Card>
         </div>

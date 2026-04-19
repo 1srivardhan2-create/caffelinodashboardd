@@ -90,44 +90,23 @@ export default function DashboardHome() {
   const completedOrders = activeOrders.filter(o => o.status === 'completed');
 
   const handlePrintReceipt = (order: any) => {
-    const printWindow = window.open('', '', 'width=350,height=900');
+    const printWindow = window.open('', '', 'width=300,height=600');
     if (!printWindow) return toast.error('Pop-up blocked. Please allow pop-ups to print.');
 
-    const qrUrl = `https://caffelino.in/order/${order.id}`;
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrUrl)}&color=000000&bgcolor=FFFFFF`;
-
-    // UPI Payment QR
-    const cafeUpiId = cafe?.upiId || '';
-    const cafeName = cafe?.name || 'Caffelino';
-    const upiLink = cafeUpiId ? `upi://pay?pa=${encodeURIComponent(cafeUpiId)}&pn=${encodeURIComponent(cafeName)}&am=${order.totalAmount.toFixed(2)}&cu=INR` : '';
-    const upiQrImageUrl = upiLink ? `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiLink)}&color=000000&bgcolor=FFFFFF` : '';
-
     const itemsHtml = order.items.map((item: any) => `
-      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; font-weight: 600; color: #000;">
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px;">
         <span>${item.name} x${item.quantity}</span>
         <span>₹${(item.price * item.quantity).toFixed(2)}</span>
       </div>
     `).join('');
 
-    // UPI Payment section HTML (only if UPI ID is set)
-    const upiSectionHtml = upiQrImageUrl ? `
-      <div class="divider" style="margin-top: 15px;"></div>
-      <div class="text-center" style="margin-top: 10px;">
-        <div style="font-size: 13px; font-weight: 900; color: #000; margin-bottom: 4px; letter-spacing: 1px;">
-          💳 SCAN & PAY
-        </div>
-        <div style="font-size: 10px; font-weight: 600; color: #000; margin-bottom: 8px;">
-          Pay ₹${order.totalAmount.toFixed(2)} via UPI
-        </div>
-        <div style="display: flex; justify-content: center;">
-          <img src="${upiQrImageUrl}" alt="UPI QR" class="qr-img" style="width: 140px; height: 140px; border: 2px solid #000; padding: 4px;" />
-        </div>
-        <div style="font-size: 10px; font-weight: 600; color: #000; margin-top: 6px;">
-          UPI: ${cafeUpiId}
-        </div>
-        <div style="font-size: 9px; font-weight: 500; color: #000; margin-top: 2px;">
-          Amount auto-filled • ${cafeName}
-        </div>
+    // QR code section — only if cafe has uploaded a QR
+    const qrSection = cafe?.upiPhoto ? `
+      <div class="divider"></div>
+      <div class="text-center" style="margin: 15px 0;">
+        <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">💳 Scan & Pay</p>
+        <img src="${cafe.upiPhoto}" alt="Payment QR" style="width: 140px; height: 140px; margin: 0 auto; display: block; image-rendering: pixelated;" />
+        <p style="font-size: 11px; color: #666; margin-top: 6px;">Scan this QR to pay via UPI</p>
       </div>
     ` : '';
 
@@ -136,97 +115,55 @@ export default function DashboardHome() {
         <head>
           <title>Receipt #${order.orderId || order.id.slice(-6)}</title>
           <style>
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            body { font-family: 'Courier New', Courier, monospace; width: 300px; margin: 0 auto; padding: 15px; color: #000 !important; -webkit-print-color-adjust: exact; }
+            body { font-family: 'Courier New', Courier, monospace; width: 300px; margin: 0; padding: 10px; color: #000; }
             .text-center { text-align: center; }
-            .font-bold { font-weight: 900 !important; color: #000 !important; }
-            .divider { border-top: 2px dashed #000; margin: 12px 0; }
+            .font-bold { font-weight: bold; }
+            .divider { border-top: 1px dashed #000; margin: 10px 0; }
             .flex-between { display: flex; justify-content: space-between; }
-            h2 { font-size: 22px; font-weight: 900 !important; color: #000 !important; margin: 5px 0; letter-spacing: 3px; }
-            p, span, div { color: #000 !important; font-weight: 600 !important; }
-            @media print { 
-              @page { margin: 0; } 
-              body { margin: 0.5cm; color: #000 !important; }
-              * { color: #000 !important; -webkit-print-color-adjust: exact !important; }
-            }
+            @media print { @page { margin: 0; } body { margin: 1cm; } }
           </style>
         </head>
         <body>
-          <h2 class="text-center">☕ CAFFELINO</h2>
-          <div class="text-center" style="font-size: 11px; margin-bottom: 8px; font-weight: 600; color: #000; letter-spacing: 1px;">
-            CAFE ORDER RECEIPT
-          </div>
-          <div class="divider"></div>
-          <div class="text-center" style="font-size: 16px; margin-bottom: 8px; font-weight: 900; color: #000;">
+          <h2 class="text-center">${cafe?.name || 'CAFFELINO'}</h2>
+          <div class="text-center" style="font-size: 14px; margin-bottom: 10px;">
             Order #${order.orderId || order.id.slice(-6)}
           </div>
-          ${order.userName ? `<div style="font-size: 14px; margin-bottom: 5px; font-weight: 700; color: #000;">Customer: ${order.userName}</div>` : ''}
-          ${order.memberCount ? `<div style="font-size: 14px; margin-bottom: 5px; font-weight: 700; color: #000;">Members: ${order.memberCount}</div>` : ''}
-          <div style="font-size: 13px; margin-bottom: 12px; font-weight: 600; color: #000;">Date: ${new Date(order.createdAt).toLocaleString()}</div>
+          ${order.userName ? `<div style="font-size: 14px; margin-bottom: 5px;">Customer: ${order.userName}</div>` : ''}
+          ${order.memberCount ? `<div style="font-size: 14px; margin-bottom: 5px;">Members: ${order.memberCount}</div>` : ''}
+          <div style="font-size: 14px; margin-bottom: 15px;">Date & Time: ${new Date(order.createdAt).toLocaleString()}</div>
           
           <div class="divider"></div>
-          <div style="font-size: 12px; font-weight: 900; color: #000; margin-bottom: 8px; letter-spacing: 1px;">ITEMS:</div>
           ${itemsHtml}
           <div class="divider"></div>
           
-          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px; font-weight: 700; color: #000;">
+          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
             <span>Subtotal:</span>
             <span>₹${order.subtotal.toFixed(2)}</span>
           </div>
-          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px; font-weight: 700; color: #000;">
+          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
             <span>CGST:</span>
             <span>₹${order.cgst.toFixed(2)}</span>
           </div>
-          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px; font-weight: 700; color: #000;">
+          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
             <span>SGST:</span>
             <span>₹${order.sgst.toFixed(2)}</span>
           </div>
           
           <div class="divider"></div>
-          <div class="flex-between font-bold" style="font-size: 18px; font-weight: 900 !important; color: #000 !important;">
+          <div class="flex-between font-bold" style="font-size: 16px;">
             <span>TOTAL:</span>
             <span>₹${order.totalAmount.toFixed(2)}</span>
           </div>
           <div class="divider"></div>
 
-          ${upiSectionHtml}
+          ${qrSection}
           
-          <div class="divider" style="margin-top: 15px;"></div>
-          <div class="text-center" style="margin-top: 8px;">
-            <div style="font-size: 11px; font-weight: 800; color: #000; margin-bottom: 8px; letter-spacing: 1px;">
-              ━━━ SCAN AT COUNTER ━━━
-            </div>
-            <div style="display: flex; justify-content: center;">
-              <img src="${qrImageUrl}" alt="Order QR" class="qr-img" style="width: 120px; height: 120px; border: 2px solid #000; padding: 3px;" />
-            </div>
-            <div style="font-size: 9px; font-weight: 600; color: #000; margin-top: 6px; word-break: break-all;">
-              ${qrUrl}
-            </div>
-          </div>
-          
-          <div class="divider" style="margin-top: 12px;"></div>
-          <div class="text-center font-bold" style="font-size: 14px; font-weight: 900; color: #000; margin-top: 8px;">
-            THANK YOU! VISIT AGAIN ☕
-          </div>
-          <div class="text-center" style="font-size: 10px; font-weight: 600; color: #000; margin-top: 5px;">
-            Powered by Caffelino
+          <div class="text-center font-bold" style="font-size: 14px; margin-top: 20px;">
+            THANK YOU! VISIT AGAIN
           </div>
           
           <script>
-            window.onload = function() { 
-              var imgs = document.querySelectorAll('.qr-img');
-              var loaded = 0;
-              var total = imgs.length;
-              if (total === 0) { window.print(); setTimeout(function() { window.close(); }, 500); return; }
-              function checkDone() {
-                loaded++;
-                if (loaded >= total) { window.print(); setTimeout(function() { window.close(); }, 500); }
-              }
-              imgs.forEach(function(img) {
-                if (img.complete) { checkDone(); }
-                else { img.onload = checkDone; img.onerror = checkDone; }
-              });
-            }
+            window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
           </script>
         </body>
       </html>
@@ -390,23 +327,13 @@ export default function DashboardHome() {
         ) : (
           <>
             {order.status === 'pending' && (
-              <div className="space-y-2">
-                <Button
-                  className="w-full bg-blue-500 hover:bg-blue-600"
-                  onClick={() => handleAccept(order.id)}
-                >
-                  <CheckCircle className="mr-2 size-4" />
-                  Accept Order
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full border-orange-400 text-orange-500 hover:bg-orange-50"
-                  onClick={() => handlePrintReceipt(order)}
-                >
-                  <Printer className="mr-2 size-4" />
-                  Print Bill with QR
-                </Button>
-              </div>
+              <Button
+                className="w-full bg-blue-500 hover:bg-blue-600"
+                onClick={() => handleAccept(order.id)}
+              >
+                <CheckCircle className="mr-2 size-4" />
+                Accept Order
+              </Button>
             )}
 
             {order.status === 'confirmed' && (
@@ -420,24 +347,13 @@ export default function DashboardHome() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full border-orange-400 text-orange-500 hover:bg-orange-50"
+                  className="w-full border-green-500 text-green-600 hover:bg-green-50"
                   onClick={() => handlePrintReceipt(order)}
                 >
                   <Printer className="mr-2 size-4" />
-                  Print Bill with QR
+                  Print Receipt
                 </Button>
               </div>
-            )}
-
-            {order.status === 'completed' && (
-              <Button
-                variant="outline"
-                className="w-full border-orange-400 text-orange-500 hover:bg-orange-50"
-                onClick={() => handlePrintReceipt(order)}
-              >
-                <Printer className="mr-2 size-4" />
-                Print Bill with QR
-              </Button>
             )}
           </>
         )}

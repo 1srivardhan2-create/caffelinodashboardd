@@ -66,7 +66,7 @@ const googleLogin = async (req, res) => {
           openingTime: cafe.opening_hours?.monday?.open || '',
           closingTime: cafe.opening_hours?.monday?.close || '',
           isOpen: cafe.isOpen !== false,
-          upiId: cafe.upiId || ''
+          upiPhoto: cafe.upi_photo || ''
         },
         token
       });
@@ -112,7 +112,7 @@ const getCafeStatus = async (req, res) => {
       openingTime: cafe.opening_hours?.monday?.open || '',
       closingTime: cafe.opening_hours?.monday?.close || '',
       isOpen: cafe.isOpen !== false,
-      upiId: cafe.upiId || ''
+      upiPhoto: cafe.upi_photo || ''
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -316,7 +316,6 @@ const updateCafe = async (req, res) => {
     if (req.body.address) updateData.Cafe_Address = req.body.address;
     if (req.body.managerName) updateData.managerName = req.body.managerName;
     if (req.body.managerPhone) updateData.Phonenumber = req.body.managerPhone;
-    if (req.body.upiId !== undefined) updateData.upiId = req.body.upiId;
     if (req.body.averageCostPerPerson) {
       updateData.averageCostPerPerson = Number(req.body.averageCostPerPerson);
       updateData.Average_Cost = String(req.body.averageCostPerPerson);
@@ -1006,8 +1005,86 @@ const toggleCafeOpen = async (req, res) => {
   }
 };
 
+// ===== QR CODE MANAGEMENT =====
+
+const uploadQR = async (req, res) => {
+  try {
+    const cafeId = req.cafe.id;
+    const cafe = await Cafe.findById(cafeId);
+    if (!cafe) return res.status(404).json({ message: "Cafe not found" });
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No QR image file provided" });
+    }
+
+    let qrUrl;
+    try {
+      qrUrl = await uploadBuffer(req.file.buffer, "cafes/qr");
+    } catch (uploadErr) {
+      console.error("Cloudinary QR upload error:", uploadErr.message);
+      return res.status(500).json({ message: "Failed to upload QR image" });
+    }
+
+    // Save QR URL to upi_photo field
+    const updatedCafe = await Cafe.findByIdAndUpdate(
+      cafeId,
+      { $set: { upi_photo: qrUrl } },
+      { new: true, runValidators: false }
+    );
+
+    return res.status(200).json({
+      message: "QR uploaded successfully",
+      upiPhoto: updatedCafe.upi_photo
+    });
+
+  } catch (error) {
+    console.error("uploadQR error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getQR = async (req, res) => {
+  try {
+    const cafeId = req.cafe.id;
+    const cafe = await Cafe.findById(cafeId);
+    if (!cafe) return res.status(404).json({ message: "Cafe not found" });
+
+    return res.status(200).json({
+      upiPhoto: cafe.upi_photo || null
+    });
+
+  } catch (error) {
+    console.error("getQR error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteQR = async (req, res) => {
+  try {
+    const cafeId = req.cafe.id;
+
+    const updatedCafe = await Cafe.findByIdAndUpdate(
+      cafeId,
+      { $set: { upi_photo: "" } },
+      { new: true, runValidators: false }
+    );
+
+    if (!updatedCafe) return res.status(404).json({ message: "Cafe not found" });
+
+    return res.status(200).json({
+      message: "QR removed successfully",
+      upiPhoto: ""
+    });
+
+  } catch (error) {
+    console.error("deleteQR error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerCafe, Logincafe, approveCafe, googleLogin, getCafeStatus, updateCafe, deleteCafe, getCafeById, MenuItem, EditMenuItem, toggleMenuAvailability
   , deleteItem, getItems, getItemById, getCafeOrders, updateOrderStatus, collectPayment, getCafeTotalAmount, getAllCafesAdmin, getApprovedCafesUser, getCafeDetailsUser,
-  createOrderUser, deleteOrderDashboard, restoreOrderDashboard, updateProfilePhoto, updateGalleryPhotos, deleteGalleryPhoto, toggleCafeOpen
+  createOrderUser, deleteOrderDashboard, restoreOrderDashboard, updateProfilePhoto, updateGalleryPhotos, deleteGalleryPhoto, toggleCafeOpen,
+  uploadQR, getQR, deleteQR
 };
