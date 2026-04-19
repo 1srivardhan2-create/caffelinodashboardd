@@ -65,7 +65,8 @@ const googleLogin = async (req, res) => {
           profilePicture: cafe.Cafe_photos?.length > 0 ? cafe.Cafe_photos[0] : '',
           openingTime: cafe.opening_hours?.monday?.open || '',
           closingTime: cafe.opening_hours?.monday?.close || '',
-          isOpen: cafe.isOpen !== false
+          isOpen: cafe.isOpen !== false,
+          upiId: cafe.upiId || ''
         },
         token
       });
@@ -110,7 +111,8 @@ const getCafeStatus = async (req, res) => {
       profilePicture: cafe.Cafe_photos?.length > 0 ? cafe.Cafe_photos[0] : '',
       openingTime: cafe.opening_hours?.monday?.open || '',
       closingTime: cafe.opening_hours?.monday?.close || '',
-      isOpen: cafe.isOpen !== false
+      isOpen: cafe.isOpen !== false,
+      upiId: cafe.upiId || ''
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -314,6 +316,7 @@ const updateCafe = async (req, res) => {
     if (req.body.address) updateData.Cafe_Address = req.body.address;
     if (req.body.managerName) updateData.managerName = req.body.managerName;
     if (req.body.managerPhone) updateData.Phonenumber = req.body.managerPhone;
+    if (req.body.upiId !== undefined) updateData.upiId = req.body.upiId;
     if (req.body.averageCostPerPerson) {
       updateData.averageCostPerPerson = Number(req.body.averageCostPerPerson);
       updateData.Average_Cost = String(req.body.averageCostPerPerson);

@@ -26,6 +26,7 @@ export interface Cafe {
   status: 'pending_verification' | 'approved' | 'rejected' | boolean | string;
   profilePicture?: string;
   isOpen?: boolean;
+  upiId?: string;
 }
 
 interface AuthContextType {
@@ -74,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             profilePicture: res.profilePicture,
             openingTime: res.openingTime,
             closingTime: res.closingTime,
-            isOpen: res.isOpen !== false
+            isOpen: res.isOpen !== false,
+            upiId: res.upiId || ''
           });
           // Also set a minimal user to show as authenticated
           setUser({
@@ -143,7 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           profilePicture: response.cafe.profilePicture,
           openingTime: response.cafe.openingTime,
           closingTime: response.cafe.closingTime,
-          isOpen: response.cafe.isOpen !== false
+          isOpen: response.cafe.isOpen !== false,
+          upiId: response.cafe.upiId || ''
         });
       }
       

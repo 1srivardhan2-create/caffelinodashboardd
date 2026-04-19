@@ -90,11 +90,17 @@ export default function DashboardHome() {
   const completedOrders = activeOrders.filter(o => o.status === 'completed');
 
   const handlePrintReceipt = (order: any) => {
-    const printWindow = window.open('', '', 'width=350,height=800');
+    const printWindow = window.open('', '', 'width=350,height=900');
     if (!printWindow) return toast.error('Pop-up blocked. Please allow pop-ups to print.');
 
     const qrUrl = `https://caffelino.in/order/${order.id}`;
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrUrl)}&color=000000&bgcolor=FFFFFF`;
+
+    // UPI Payment QR
+    const cafeUpiId = cafe?.upiId || '';
+    const cafeName = cafe?.name || 'Caffelino';
+    const upiLink = cafeUpiId ? `upi://pay?pa=${encodeURIComponent(cafeUpiId)}&pn=${encodeURIComponent(cafeName)}&am=${order.totalAmount.toFixed(2)}&cu=INR` : '';
+    const upiQrImageUrl = upiLink ? `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(upiLink)}&color=000000&bgcolor=FFFFFF` : '';
 
     const itemsHtml = order.items.map((item: any) => `
       <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; font-weight: 600; color: #000;">
@@ -102,6 +108,28 @@ export default function DashboardHome() {
         <span>₹${(item.price * item.quantity).toFixed(2)}</span>
       </div>
     `).join('');
+
+    // UPI Payment section HTML (only if UPI ID is set)
+    const upiSectionHtml = upiQrImageUrl ? `
+      <div class="divider" style="margin-top: 15px;"></div>
+      <div class="text-center" style="margin-top: 10px;">
+        <div style="font-size: 13px; font-weight: 900; color: #000; margin-bottom: 4px; letter-spacing: 1px;">
+          💳 SCAN & PAY
+        </div>
+        <div style="font-size: 10px; font-weight: 600; color: #000; margin-bottom: 8px;">
+          Pay ₹${order.totalAmount.toFixed(2)} via UPI
+        </div>
+        <div style="display: flex; justify-content: center;">
+          <img src="${upiQrImageUrl}" alt="UPI QR" class="qr-img" style="width: 140px; height: 140px; border: 2px solid #000; padding: 4px;" />
+        </div>
+        <div style="font-size: 10px; font-weight: 600; color: #000; margin-top: 6px;">
+          UPI: ${cafeUpiId}
+        </div>
+        <div style="font-size: 9px; font-weight: 500; color: #000; margin-top: 2px;">
+          Amount auto-filled • ${cafeName}
+        </div>
+      </div>
+    ` : '';
 
     const html = `
       <html>
@@ -160,20 +188,23 @@ export default function DashboardHome() {
             <span>₹${order.totalAmount.toFixed(2)}</span>
           </div>
           <div class="divider"></div>
+
+          ${upiSectionHtml}
           
-          <div class="text-center" style="margin-top: 15px;">
-            <div style="font-size: 12px; font-weight: 800; color: #000; margin-bottom: 10px; letter-spacing: 1px;">
+          <div class="divider" style="margin-top: 15px;"></div>
+          <div class="text-center" style="margin-top: 8px;">
+            <div style="font-size: 11px; font-weight: 800; color: #000; margin-bottom: 8px; letter-spacing: 1px;">
               ━━━ SCAN AT COUNTER ━━━
             </div>
             <div style="display: flex; justify-content: center;">
-              <img src="${qrImageUrl}" alt="QR Code" style="width: 140px; height: 140px; border: 2px solid #000; padding: 4px;" />
+              <img src="${qrImageUrl}" alt="Order QR" class="qr-img" style="width: 120px; height: 120px; border: 2px solid #000; padding: 3px;" />
             </div>
-            <div style="font-size: 10px; font-weight: 600; color: #000; margin-top: 8px; word-break: break-all;">
+            <div style="font-size: 9px; font-weight: 600; color: #000; margin-top: 6px; word-break: break-all;">
               ${qrUrl}
             </div>
           </div>
           
-          <div class="divider" style="margin-top: 15px;"></div>
+          <div class="divider" style="margin-top: 12px;"></div>
           <div class="text-center font-bold" style="font-size: 14px; font-weight: 900; color: #000; margin-top: 8px;">
             THANK YOU! VISIT AGAIN ☕
           </div>
@@ -183,24 +214,18 @@ export default function DashboardHome() {
           
           <script>
             window.onload = function() { 
-              // Wait for QR image to fully load before printing
-              var img = document.querySelector('img');
-              if (img && img.complete) {
-                window.print(); 
-                setTimeout(function() { window.close(); }, 500);
-              } else if (img) {
-                img.onload = function() {
-                  window.print(); 
-                  setTimeout(function() { window.close(); }, 500);
-                };
-                img.onerror = function() {
-                  window.print(); 
-                  setTimeout(function() { window.close(); }, 500);
-                };
-              } else {
-                window.print(); 
-                setTimeout(function() { window.close(); }, 500);
+              var imgs = document.querySelectorAll('.qr-img');
+              var loaded = 0;
+              var total = imgs.length;
+              if (total === 0) { window.print(); setTimeout(function() { window.close(); }, 500); return; }
+              function checkDone() {
+                loaded++;
+                if (loaded >= total) { window.print(); setTimeout(function() { window.close(); }, 500); }
               }
+              imgs.forEach(function(img) {
+                if (img.complete) { checkDone(); }
+                else { img.onload = checkDone; img.onerror = checkDone; }
+              });
             }
           </script>
         </body>

@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { toast } from 'sonner';
-import { Pencil, Save, X, MapPin, Clock, Phone, User, Mail, QrCode, Search, ExternalLink, CheckCircle } from 'lucide-react';
+import { Pencil, Save, X, MapPin, Clock, Phone, User, Mail, QrCode, Search, ExternalLink, CheckCircle, CreditCard } from 'lucide-react';
 
 export default function Profile() {
   const { cafe, updateCafe } = useAuth();
@@ -21,7 +21,8 @@ export default function Profile() {
     closingTime: '',
     managerName: '',
     managerPhone: '',
-    costPerPerson: ''
+    costPerPerson: '',
+    upiId: ''
   });
 
   useEffect(() => {
@@ -33,7 +34,8 @@ export default function Profile() {
         closingTime: cafe.closingTime || '',
         managerName: cafe.managerName || '',
         managerPhone: cafe.managerPhone || '',
-        costPerPerson: cafe.costPerPerson || ''
+        costPerPerson: cafe.costPerPerson || '',
+        upiId: cafe.upiId || ''
       });
     }
   }, [cafe]);
@@ -52,7 +54,8 @@ export default function Profile() {
         closingTime: formData.closingTime,
         managerName: formData.managerName,
         managerPhone: formData.managerPhone,
-        averageCostPerPerson: Number(formData.costPerPerson) || formData.costPerPerson
+        averageCostPerPerson: Number(formData.costPerPerson) || formData.costPerPerson,
+        upiId: formData.upiId
       });
 
       updateCafe(formData);
@@ -71,7 +74,8 @@ export default function Profile() {
       closingTime: cafe?.closingTime || '',
       managerName: cafe?.managerName || '',
       managerPhone: cafe?.managerPhone || '',
-      costPerPerson: cafe?.costPerPerson || ''
+      costPerPerson: cafe?.costPerPerson || '',
+      upiId: cafe?.upiId || ''
     });
     setIsEditing(false);
   };
@@ -227,6 +231,36 @@ export default function Profile() {
                   />
                 ) : (
                   <p className="font-medium text-lg text-orange-600">₹{cafe.costPerPerson || 'N/A'}</p>
+                )}
+              </div>
+
+              {/* UPI ID */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <CreditCard className="size-4 text-purple-500" />
+                  UPI ID (for Payment QR)
+                </Label>
+                {isEditing ? (
+                  <>
+                    <Input
+                      value={formData.upiId}
+                      onChange={e => setFormData({ ...formData, upiId: e.target.value })}
+                      placeholder="e.g. caffelino@okaxis"
+                    />
+                    <p className="text-xs text-gray-500">
+                      This UPI ID will appear on every printed bill for instant payment
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {cafe.upiId ? (
+                      <p className="font-medium text-purple-600 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
+                        {cafe.upiId}
+                      </p>
+                    ) : (
+                      <p className="text-gray-400 italic text-sm">Not set — Edit profile to add UPI ID</p>
+                    )}
+                  </div>
                 )}
               </div>
             </CardContent>

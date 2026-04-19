@@ -65,6 +65,7 @@ const Cafe_log = new mongoose.Schema(
     status: { type: String, enum: ["pending", "approved"], default: "pending" },
     role: { type: String, default: "cafe" },
     isOpen: { type: Boolean, default: true },
+    upiId: { type: String, default: "" },
   },
   
   { timestamps: true }
