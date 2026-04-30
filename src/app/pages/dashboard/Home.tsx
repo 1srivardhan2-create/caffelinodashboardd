@@ -90,23 +90,27 @@ export default function DashboardHome() {
   const completedOrders = activeOrders.filter(o => o.status === 'completed');
 
   const handlePrintReceipt = (order: any) => {
-    const printWindow = window.open('', '', 'width=300,height=600');
+    const printWindow = window.open('', '', 'width=320,height=700');
     if (!printWindow) return toast.error('Pop-up blocked. Please allow pop-ups to print.');
 
+    const cafeName = (cafe?.name || 'CAFE').toUpperCase();
+
+    // Item rows — table-style with name, qty, price
     const itemsHtml = order.items.map((item: any) => `
-      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px;">
-        <span>${item.name} x${item.quantity}</span>
-        <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+      <div class="item-row">
+        <span class="item-name">${item.name}</span>
+        <span class="item-qty">${item.quantity}</span>
+        <span class="item-price">₹${(item.price * item.quantity).toFixed(2)}</span>
       </div>
     `).join('');
 
     // QR code section — only if cafe has uploaded a QR
     const qrSection = cafe?.upiPhoto ? `
       <div class="divider"></div>
-      <div class="text-center" style="margin: 15px 0;">
-        <p style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">💳 Scan & Pay</p>
-        <img src="${cafe.upiPhoto}" alt="Payment QR" style="width: 140px; height: 140px; margin: 0 auto; display: block; image-rendering: pixelated;" />
-        <p style="font-size: 11px; color: #666; margin-top: 6px;">Scan this QR to pay via UPI</p>
+      <div class="qr-section">
+        <p class="qr-title">Scan & Pay</p>
+        <img src="${cafe.upiPhoto}" alt="Payment QR" class="qr-img" />
+        <p class="qr-hint">Scan this QR to pay via UPI</p>
       </div>
     ` : '';
 
@@ -115,55 +119,237 @@ export default function DashboardHome() {
         <head>
           <title>Receipt #${order.orderId || order.id.slice(-6)}</title>
           <style>
-            body { font-family: 'Courier New', Courier, monospace; width: 300px; margin: 0; padding: 10px; color: #000; }
-            .text-center { text-align: center; }
-            .font-bold { font-weight: bold; }
-            .divider { border-top: 1px dashed #000; margin: 10px 0; }
-            .flex-between { display: flex; justify-content: space-between; }
-            @media print { @page { margin: 0; } body { margin: 1cm; } }
+            /* ===== BASE RECEIPT STYLES ===== */
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: 'Courier New', Courier, monospace;
+              width: 280px;
+              margin: 0 auto;
+              padding: 10px;
+              background: #fff;
+              color: #000;
+              font-weight: 600;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+
+            /* Header — Cafe Name */
+            .cafe-name {
+              text-align: center;
+              font-size: 20px;
+              font-weight: 900;
+              letter-spacing: 2px;
+              padding: 8px 0 4px;
+              color: #000;
+            }
+            .order-info {
+              text-align: center;
+              font-size: 13px;
+              font-weight: 600;
+              margin-bottom: 4px;
+              color: #000;
+            }
+            .meta-info {
+              font-size: 13px;
+              font-weight: 600;
+              margin-bottom: 3px;
+              color: #000;
+            }
+
+            /* Divider — dashed line */
+            .divider {
+              border: none;
+              border-top: 2px dashed #000;
+              margin: 8px 0;
+            }
+
+            /* Item header row */
+            .item-header {
+              display: flex;
+              justify-content: space-between;
+              font-size: 13px;
+              font-weight: 900;
+              margin-bottom: 4px;
+              color: #000;
+              text-decoration: underline;
+            }
+            .item-header .item-name { flex: 2; }
+            .item-header .item-qty { flex: 0.5; text-align: center; }
+            .item-header .item-price { flex: 1; text-align: right; }
+
+            /* Item rows */
+            .item-row {
+              display: flex;
+              justify-content: space-between;
+              font-size: 13px;
+              font-weight: 600;
+              margin-bottom: 3px;
+              color: #000;
+            }
+            .item-name { flex: 2; }
+            .item-qty { flex: 0.5; text-align: center; }
+            .item-price { flex: 1; text-align: right; }
+
+            /* Tax rows */
+            .tax-row {
+              display: flex;
+              justify-content: space-between;
+              font-size: 13px;
+              font-weight: 600;
+              margin-bottom: 3px;
+              color: #000;
+            }
+
+            /* Total */
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              font-size: 18px;
+              font-weight: 900;
+              padding: 4px 0;
+              color: #000;
+            }
+
+            /* QR Section */
+            .qr-section {
+              text-align: center;
+              margin: 10px 0;
+            }
+            .qr-title {
+              font-size: 14px;
+              font-weight: 900;
+              margin-bottom: 8px;
+              color: #000;
+            }
+            .qr-img {
+              width: 130px;
+              height: 130px;
+              margin: 0 auto;
+              display: block;
+              image-rendering: pixelated;
+            }
+            .qr-hint {
+              font-size: 11px;
+              font-weight: 600;
+              margin-top: 6px;
+              color: #000;
+            }
+
+            /* Footer — Powered by CAFFELINO */
+            .footer {
+              text-align: center;
+              font-size: 12px;
+              font-weight: 900;
+              letter-spacing: 1px;
+              padding: 6px 0 2px;
+              color: #000;
+            }
+            .thank-you {
+              text-align: center;
+              font-size: 13px;
+              font-weight: 700;
+              margin: 6px 0;
+              color: #000;
+            }
+
+            /* ===== PRINT-SPECIFIC — DARK PRINT FIX ===== */
+            @media print {
+              @page {
+                margin: 0;
+                size: 80mm auto;
+              }
+              body {
+                margin: 0;
+                padding: 5px;
+                width: 280px;
+                color: #000 !important;
+                background: #fff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                font-weight: 700 !important;
+              }
+              .cafe-name,
+              .total-row,
+              .footer,
+              .qr-title {
+                font-weight: 900 !important;
+                color: #000 !important;
+              }
+              .item-row, .tax-row, .meta-info, .order-info, .thank-you, .qr-hint {
+                font-weight: 700 !important;
+                color: #000 !important;
+              }
+              .divider {
+                border-top: 2px dashed #000 !important;
+              }
+              /* Hide nothing — ensure full ink */
+              * {
+                color: #000 !important;
+              }
+            }
           </style>
         </head>
         <body>
-          <h2 class="text-center">${cafe?.name || 'CAFFELINO'}</h2>
-          <div class="text-center" style="font-size: 14px; margin-bottom: 10px;">
-            Order #${order.orderId || order.id.slice(-6)}
-          </div>
-          ${order.userName ? `<div style="font-size: 14px; margin-bottom: 5px;">Customer: ${order.userName}</div>` : ''}
-          ${order.memberCount ? `<div style="font-size: 14px; margin-bottom: 5px;">Members: ${order.memberCount}</div>` : ''}
-          <div style="font-size: 14px; margin-bottom: 15px;">Date & Time: ${new Date(order.createdAt).toLocaleString()}</div>
-          
+          <!-- ===== TOP: CAFE NAME ===== -->
           <div class="divider"></div>
+          <div class="cafe-name">${cafeName}</div>
+          <div class="divider"></div>
+
+          <!-- Order Info -->
+          <div class="order-info">Order #${order.orderId || order.id.slice(-6)}</div>
+          ${order.userName ? `<div class="meta-info">Customer: ${order.userName}</div>` : ''}
+          ${order.memberCount ? `<div class="meta-info">Members: ${order.memberCount}</div>` : ''}
+          <div class="meta-info">Date: ${new Date(order.createdAt).toLocaleDateString()}</div>
+          <div class="meta-info">Time: ${new Date(order.createdAt).toLocaleTimeString()}</div>
+
+          <!-- Items -->
+          <div class="divider"></div>
+          <div class="item-header">
+            <span class="item-name">Item</span>
+            <span class="item-qty">Qty</span>
+            <span class="item-price">Price</span>
+          </div>
           ${itemsHtml}
           <div class="divider"></div>
-          
-          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
+
+          <!-- Tax Breakdown -->
+          <div class="tax-row">
             <span>Subtotal:</span>
             <span>₹${order.subtotal.toFixed(2)}</span>
           </div>
-          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
+          <div class="tax-row">
             <span>CGST:</span>
             <span>₹${order.cgst.toFixed(2)}</span>
           </div>
-          <div class="flex-between" style="font-size: 14px; margin-bottom: 5px;">
+          <div class="tax-row">
             <span>SGST:</span>
             <span>₹${order.sgst.toFixed(2)}</span>
           </div>
-          
           <div class="divider"></div>
-          <div class="flex-between font-bold" style="font-size: 16px;">
+
+          <!-- TOTAL -->
+          <div class="total-row">
             <span>TOTAL:</span>
             <span>₹${order.totalAmount.toFixed(2)}</span>
           </div>
           <div class="divider"></div>
 
+          <!-- QR Code (if available) -->
           ${qrSection}
-          
-          <div class="text-center font-bold" style="font-size: 14px; margin-top: 20px;">
-            THANK YOU! VISIT AGAIN
-          </div>
-          
+
+          <!-- Thank You -->
+          <div class="thank-you">THANK YOU! VISIT AGAIN</div>
+
+          <!-- ===== BOTTOM: POWERED BY CAFFELINO ===== -->
+          <div class="divider"></div>
+          <div class="footer">Powered by CAFFELINO</div>
+          <div class="divider"></div>
+
           <script>
-            window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            }
           </script>
         </body>
       </html>
