@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
@@ -9,12 +9,23 @@ import { Coffee, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { loginWithGoogle } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { loginWithGoogle, isAuthenticated, cafe, loading } = useAuth();
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  // ✅ Auto-redirect: if already logged in, skip login page
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      if (cafe && (cafe.status === 'approved')) {
+        navigate('/dashboard', { replace: true });
+      } else if (cafe) {
+        navigate('/verification-pending', { replace: true });
+      }
+    }
+  }, [loading, isAuthenticated, cafe, navigate]);
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      setLoading(true);
+      setLoginLoading(true);
       try {
         const hasCafe = await loginWithGoogle(tokenResponse.access_token);
         toast.success('Login successful!');
@@ -26,7 +37,7 @@ export default function Login() {
       } catch (error) {
         toast.error('Login failed. Please try again.');
       } finally {
-        setLoading(false);
+        setLoginLoading(false);
       }
     },
     onError: () => {
@@ -37,6 +48,15 @@ export default function Login() {
   const handleGoogleLogin = () => {
     googleLogin();
   };
+
+  // Show loading spinner while checking auth status
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
@@ -54,9 +74,9 @@ export default function Login() {
           <Button 
             onClick={handleGoogleLogin}
             className="w-full bg-white hover:bg-gray-50 text-gray-900 border border-gray-300" 
-            disabled={loading}
+            disabled={loginLoading}
           >
-            {loading ? (
+            {loginLoading ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
                 Logging in...

@@ -35,7 +35,8 @@ const {
   toggleCafeOpen,
   uploadQR,
   getQR,
-  deleteQR
+  deleteQR,
+  logoutCafe
 } = require("../controllers/cafe.controller");
 
 const upload = require("../middlewares/upload");
@@ -43,7 +44,11 @@ const upload = require("../middlewares/upload");
 // Auth routes
 router.post("/google-login", googleLogin);
 router.post("/login", Logincafe);
+router.post("/logout", logoutCafe);
 router.get("/status", authCafe, getCafeStatus);
+router.get("/verify", authCafe, (req, res) => {
+  res.json({ valid: true, cafeId: req.cafe.id });
+});
 
 // Registration with file uploads
 router.post(

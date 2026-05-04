@@ -36,7 +36,7 @@ interface AuthContextType {
   loginWithGoogle: (accessToken: string) => Promise<boolean>;
   signup: (name: string, email: string, phone: string, password: string) => Promise<void>;
   verifyOTP: (code: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   registerCafe: (formData: FormData) => Promise<void>;
   updateCafe: (cafeData: Partial<Cafe>) => void;
   isAuthenticated: boolean;
@@ -201,8 +201,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    // You should also call backend /api/cafe/logout later to clear cookies if implemented
+  const logout = async () => {
+    try {
+      await api.post('/api/cafe/logout', {});
+    } catch (err) {
+      console.error("Logout API error (cookie cleared client-side anyway)", err);
+    }
     setUser(null);
     setCafe(null);
     setIsVerified(false);
