@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router';
+import OrderNotifier from './OrderNotifier';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { 
@@ -111,6 +112,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             );
           })}
         </nav>
+
+        {/* 🔔 Order Notifications Toggle */}
+        <div className="px-4 pb-2">
+          <OrderNotifier />
+        </div>
 
         <div className="p-4 border-t border-gray-200">
           <Button

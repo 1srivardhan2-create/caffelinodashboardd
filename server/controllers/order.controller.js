@@ -4,9 +4,9 @@ const mongoose = require("mongoose");
 exports.createOrder = async (req, res) => {
   try {
     const { items, totalAmount, cafeId, subtotal, cgst, sgst } = req.body;
-    
+
     const dummyUserId = new mongoose.Types.ObjectId();
-    
+
     const orderData = {
       ...req.body,
       user: dummyUserId,
@@ -19,7 +19,7 @@ exports.createOrder = async (req, res) => {
         price: i.price
       })),
       subtotal: subtotal || 0,
-       cgst: cgst || 0,
+      cgst: cgst || 0,
       sgst: sgst || 0,
       totalAmount: totalAmount,
       orderStatus: req.body.status || "PENDING",
@@ -41,9 +41,9 @@ exports.getOrders = async (req, res) => {
   try {
     // If accessed via cafe dashboard, req.cafe is populated
     const cafeId = req.cafe ? req.cafe.id : req.query.cafeId;
-    
+
     const query = cafeId ? { $or: [{ cafe: cafeId }, { cafeId: cafeId }] } : {};
-    
+
     const orders = await Order.find(query).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
@@ -56,15 +56,15 @@ exports.getEarnings = async (req, res) => {
   try {
     const cafeId = req.cafe ? req.cafe.id : req.query.cafeId;
     const query = cafeId ? { $or: [{ cafe: cafeId }, { cafeId: cafeId }] } : {};
-    
+
     query.orderStatus = { $in: ["COMPLETED", "completed"] };
-    
+
     const completedOrders = await Order.find(query);
-    
+
     const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
     const commission = totalRevenue * 0.06;
     const totalEarnings = totalRevenue - commission;
-    
+
     res.json({
       totalRevenue,
       totalEarnings,
@@ -79,7 +79,7 @@ exports.getEarnings = async (req, res) => {
 exports.completeOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Support finding by the document _id
     // Update both status and orderStatus to be fully compatible with frontend and backend logic
     await Order.findByIdAndUpdate(id, {
@@ -90,6 +90,38 @@ exports.completeOrder = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("Complete order error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get the latest order for notification polling
+exports.getLatestOrder = async (req, res) => {
+  try {
+    const cafeId = req.cafe ? req.cafe.id : req.query.cafeId;
+    if (!cafeId) return res.json({ order: null });
+
+    const latestOrder = await Order.findOne({
+      $or: [{ cafe: cafeId }, { cafeId: cafeId }]
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!latestOrder) return res.json({ order: null });
+
+    res.json({
+      order: {
+        id: latestOrder._id,
+        orderId: latestOrder.orderId,
+        userName: latestOrder.userName,
+        totalAmount: latestOrder.totalAmount,
+        status: latestOrder.orderStatus,
+        itemCount: latestOrder.items?.length || 0,
+        firstItem: latestOrder.items?.[0]?.name || 'Order',
+        createdAt: latestOrder.createdAt
+      }
+    });
+  } catch (err) {
+    console.error("Get latest order error:", err);
     res.status(500).json({ error: err.message });
   }
 };
