@@ -59,7 +59,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4 relative">
+      <div className="absolute top-4 right-4">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/events/login')}
+          className="bg-white/80 backdrop-blur-sm border-orange-200 text-orange-800 hover:bg-orange-50"
+        >
+          Events Organizer
+        </Button>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

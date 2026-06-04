@@ -10,9 +10,15 @@ import MenuManagement from './pages/dashboard/MenuManagement';
 import Profile from './pages/dashboard/Profile';
 import Albums from './pages/dashboard/Albums';
 import AdminApproval from './pages/dashboard/AdminApproval';
-import EventsHub from './pages/dashboard/EventsHub';
 import UserHome from './pages/user/UserHome';
 import CafeDetails from './pages/user/CafeDetails';
+
+// Events
+import EventsLogin from './pages/events/EventsLogin';
+import EventsLayout from './components/events/EventsLayout';
+import EventsDashboard from './pages/events/EventsDashboard';
+import CreateEvent from './pages/events/CreateEvent';
+import ManageEvents from './pages/events/ManageEvents';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, cafe, loading } = useAuth();
@@ -83,16 +89,6 @@ export const router = createBrowserRouter([
     )
   },
   {
-    path: '/dashboard/events',
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout>
-          <EventsHub />
-        </DashboardLayout>
-      </ProtectedRoute>
-    )
-  },
-  {
     path: '/dashboard/earnings',
     element: (
       <ProtectedRoute>
@@ -149,5 +145,33 @@ export const router = createBrowserRouter([
   {
     path: '/app/cafe/:id',
     element: <CafeDetails />
+  },
+  {
+    path: '/events/login',
+    element: <EventsLogin />
+  },
+  {
+    path: '/events/dashboard',
+    element: (
+      <EventsLayout>
+        <EventsDashboard />
+      </EventsLayout>
+    )
+  },
+  {
+    path: '/events/create',
+    element: (
+      <EventsLayout>
+        <CreateEvent />
+      </EventsLayout>
+    )
+  },
+  {
+    path: '/events/manage',
+    element: (
+      <EventsLayout>
+        <ManageEvents />
+      </EventsLayout>
+    )
   }
 ]);

@@ -12,8 +12,7 @@ import {
   Coffee,
   Image,
   X,
-  MenuIcon as MenuBurger,
-  Ticket
+  MenuIcon as MenuBurger
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -32,7 +31,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navItems = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
-    { to: '/dashboard/events', icon: Ticket, label: 'Events' },
     { to: '/dashboard/earnings', icon: DollarSign, label: 'Earnings' },
     { to: '/dashboard/menu', icon: MenuIcon, label: 'Menu' },
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
