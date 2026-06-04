@@ -19,6 +19,7 @@ import EventsLayout from './components/events/EventsLayout';
 import EventsDashboard from './pages/events/EventsDashboard';
 import CreateEvent from './pages/events/CreateEvent';
 import ManageEvents from './pages/events/ManageEvents';
+import EventsEarnings from './pages/events/EventsEarnings';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, cafe, loading } = useAuth();
@@ -155,6 +156,14 @@ export const router = createBrowserRouter([
     element: (
       <EventsLayout>
         <EventsDashboard />
+      </EventsLayout>
+    )
+  },
+  {
+    path: '/events/earnings',
+    element: (
+      <EventsLayout>
+        <EventsEarnings />
       </EventsLayout>
     )
   },

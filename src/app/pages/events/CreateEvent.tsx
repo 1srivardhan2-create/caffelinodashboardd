@@ -3,21 +3,23 @@ import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, Save, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, CheckCircle2, Copy } from 'lucide-react';
 import { 
   Step1BasicInfo, 
   Step2Banner, 
   Step3Location, 
   Step4DateTime, 
   Step5Tickets, 
-  Step6Organizer 
+  Step6Organizer,
+  Step7PaymentSettlement
 } from '../../components/events/WizardSteps';
 import EventPreviewCard from '../../components/events/EventPreviewCard';
 
 export default function CreateEvent() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 6;
+  const totalSteps = 7;
+  const [isPublished, setIsPublished] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -40,7 +42,46 @@ export default function CreateEvent() {
     phone: '',
     instagram: '',
     website: '',
+    // Payment Fields
+    accHolderName: '',
+    bankName: '',
+    accNumber: '',
+    confirmAccNumber: '',
+    ifscCode: '',
+    upiId: '',
+    panNumber: '',
+    gstNumber: '',
   });
+
+  const [errors, setErrors] = useState({
+    accNumber: '',
+    confirmAccNumber: '',
+    ifscCode: '',
+    upiId: ''
+  });
+
+  const validatePayment = () => {
+    let isValid = true;
+    const newErrors = { accNumber: '', confirmAccNumber: '', ifscCode: '', upiId: '' };
+
+    if (formData.accNumber !== formData.confirmAccNumber) {
+      newErrors.confirmAccNumber = 'Account numbers do not match';
+      isValid = false;
+    }
+    
+    if (formData.ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifscCode)) {
+      newErrors.ifscCode = 'Invalid IFSC code format';
+      isValid = false;
+    }
+
+    if (formData.upiId && !/^[\w.-]+@[\w.-]+$/.test(formData.upiId)) {
+      newErrors.upiId = 'Invalid UPI ID format';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleNext = () => {
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
@@ -56,8 +97,20 @@ export default function CreateEvent() {
   };
 
   const handlePublish = () => {
+    if (currentStep === 7) {
+      if (!validatePayment()) {
+        toast.error('Please fix payment details errors.');
+        return;
+      }
+      
+      if (!formData.accNumber || !formData.ifscCode) {
+        toast.error('Account Number and IFSC Code are mandatory.');
+        return;
+      }
+    }
+    
+    setIsPublished(true);
     toast.success('Event published successfully!');
-    navigate('/events/manage');
   };
 
   const stepTitles = [
@@ -66,8 +119,80 @@ export default function CreateEvent() {
     'Location',
     'Date & Time',
     'Tickets',
-    'Organizer Information'
+    'Organizer Information',
+    'Payment Settlement'
   ];
+
+  if (isPublished) {
+    const maskedAccount = formData.accNumber.length > 4 
+      ? `•••• ${formData.accNumber.slice(-4)}` 
+      : '••••';
+
+    return (
+      <div className="max-w-3xl mx-auto pt-10">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-[#E8DCC4] text-center"
+        >
+          <div className="flex justify-center mb-6">
+            <div className="bg-green-100 p-4 rounded-full">
+              <CheckCircle2 className="size-16 text-green-600" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-extrabold text-[#3E2723] tracking-tight mb-2">Event Published Successfully</h1>
+          <p className="text-[#8B5E3C] text-lg mb-10">Your event is now live and ready for registrations.</p>
+          
+          <div className="bg-[#FDFBF7] rounded-2xl p-6 mb-8 text-left border border-[#E8DCC4]">
+            <h3 className="font-bold text-[#3E2723] mb-4 text-xl">{formData.name || 'Your Event'}</h3>
+            <div className="grid grid-cols-2 gap-y-4">
+              <div>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Ticket Price</p>
+                <p className="font-medium text-[#3E2723]">{formData.isPaid ? `₹ ${formData.price}` : 'Free'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Date</p>
+                <p className="font-medium text-[#3E2723]">{formData.date || 'TBD'}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Venue</p>
+                <p className="font-medium text-[#3E2723]">{formData.venue || 'TBD'} {formData.cafe ? `at ${formData.cafe}` : ''}</p>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-6 border-t border-[#E8DCC4]">
+              <p className="text-xs text-[#8B5E3C] font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                Organizer Settlement Account
+              </p>
+              <div className="bg-white p-3 rounded-lg border border-[#E8DCC4] flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-[#3E2723]">{formData.bankName || 'Bank'}</p>
+                  <p className="text-sm font-medium text-gray-500">{maskedAccount}</p>
+                </div>
+                <Button variant="ghost" size="sm" className="text-[#8B5E3C]"><Copy className="size-4" /></Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={() => navigate('/events/dashboard')}
+              className="bg-[#3E2723] text-white hover:bg-[#5C3A21] px-8 h-12 rounded-xl"
+            >
+              Go to Dashboard
+            </Button>
+            <Button 
+              onClick={() => navigate('/events/manage')}
+              variant="outline"
+              className="border-[#E8DCC4] text-[#8B5E3C] hover:bg-[#F5E6D3]/50 px-8 h-12 rounded-xl"
+            >
+              Manage Events
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -138,6 +263,7 @@ export default function CreateEvent() {
                   {currentStep === 4 && <Step4DateTime formData={formData} setFormData={setFormData} />}
                   {currentStep === 5 && <Step5Tickets formData={formData} setFormData={setFormData} />}
                   {currentStep === 6 && <Step6Organizer formData={formData} setFormData={setFormData} />}
+                  {currentStep === 7 && <Step7PaymentSettlement formData={formData} setFormData={setFormData} errors={errors} />}
                 </motion.div>
               </AnimatePresence>
             </div>

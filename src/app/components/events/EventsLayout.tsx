@@ -9,7 +9,8 @@ import {
   LogOut,
   Ticket,
   X,
-  MenuIcon as MenuBurger
+  MenuIcon as MenuBurger,
+  IndianRupee
 } from 'lucide-react';
 
 interface EventsLayoutProps {
@@ -27,6 +28,7 @@ export default function EventsLayout({ children }: EventsLayoutProps) {
 
   const navItems = [
     { to: '/events/dashboard', icon: LayoutDashboard, label: 'Overview' },
+    { to: '/events/earnings', icon: IndianRupee, label: 'Earnings' },
     { to: '/events/create', icon: PlusCircle, label: 'Create Event' },
     { to: '/events/manage', icon: CalendarDays, label: 'Manage Events' },
   ];
