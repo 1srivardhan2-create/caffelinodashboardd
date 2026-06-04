@@ -10,6 +10,7 @@ import MenuManagement from './pages/dashboard/MenuManagement';
 import Profile from './pages/dashboard/Profile';
 import Albums from './pages/dashboard/Albums';
 import AdminApproval from './pages/dashboard/AdminApproval';
+import EventsHub from './pages/dashboard/EventsHub';
 import UserHome from './pages/user/UserHome';
 import CafeDetails from './pages/user/CafeDetails';
 
@@ -77,6 +78,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <DashboardLayout>
           <DashboardHome />
+        </DashboardLayout>
+      </ProtectedRoute>
+    )
+  },
+  {
+    path: '/dashboard/events',
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <EventsHub />
         </DashboardLayout>
       </ProtectedRoute>
     )
