@@ -11,7 +11,8 @@ import {
   Ticket,
   X,
   MenuIcon as MenuBurger,
-  IndianRupee
+  IndianRupee,
+  ListOrdered
 } from 'lucide-react';
 
 interface EventsLayoutProps {
