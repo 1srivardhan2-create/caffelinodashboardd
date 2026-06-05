@@ -2,8 +2,11 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
+import { Button } from '../ui/button';
 import { motion } from 'motion/react';
-import { UploadCloud, MapPin, Calendar as CalendarIcon, Clock, Link as LinkIcon, Instagram, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
+import { UploadCloud, MapPin, Calendar as CalendarIcon, Clock, Link as LinkIcon, Instagram, Lock, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 
 export const Step1BasicInfo = ({ formData, setFormData }: any) => {
   const categories = [
@@ -61,9 +64,44 @@ export const Step1BasicInfo = ({ formData, setFormData }: any) => {
 };
 
 export const Step2Banner = ({ formData, setFormData }: any) => {
-  const handleSimulateUpload = () => {
-    // Mocking an image upload by just setting a placeholder premium image
-    setFormData({ ...formData, banner: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=1200&h=675' });
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File exceeds 5MB limit');
+      return;
+    }
+
+    const uploadData = new FormData();
+    uploadData.append('banner', file);
+
+    setIsUploading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/events/upload-banner', {
+        method: 'POST',
+        body: uploadData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setFormData({ ...formData, bannerUrl: data.bannerUrl, bannerPublicId: data.publicId });
+        toast.success('Banner uploaded successfully');
+      } else {
+        toast.error(data.message || 'Failed to upload banner');
+      }
+    } catch (error) {
+      toast.error('An error occurred during upload');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -72,22 +110,38 @@ export const Step2Banner = ({ formData, setFormData }: any) => {
         <Label className="text-[#3E2723] font-semibold">Event Banner</Label>
         <p className="text-sm text-gray-500">Recommended size: 1200 x 675px</p>
         
-        {!formData.banner ? (
+        {!formData.bannerUrl ? (
           <div 
-            onClick={handleSimulateUpload}
-            className="mt-4 border-2 border-dashed border-[#C19A6B] rounded-2xl p-12 flex flex-col items-center justify-center bg-[#FDFBF7] cursor-pointer hover:bg-[#F5E6D3]/40 transition-colors duration-300 group"
+            onClick={isUploading ? undefined : handleUploadClick}
+            className={`mt-4 border-2 border-dashed border-[#C19A6B] rounded-2xl p-12 flex flex-col items-center justify-center bg-[#FDFBF7] ${isUploading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:bg-[#F5E6D3]/40'} transition-colors duration-300 group`}
           >
-            <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform duration-300">
-              <UploadCloud className="size-8 text-[#8B5E3C]" />
-            </div>
-            <p className="text-[#3E2723] font-medium mb-1">Click to upload or drag & drop</p>
-            <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (max. 5MB)</p>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/jpeg, image/png, image/webp" 
+              onChange={handleFileChange}
+            />
+            {isUploading ? (
+              <div className="flex flex-col items-center">
+                <Loader2 className="size-10 text-[#8B5E3C] animate-spin mb-4" />
+                <p className="text-[#3E2723] font-medium">Uploading Banner...</p>
+              </div>
+            ) : (
+              <>
+                <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <UploadCloud className="size-8 text-[#8B5E3C]" />
+                </div>
+                <p className="text-[#3E2723] font-medium mb-1">Click to upload or drag & drop</p>
+                <p className="text-xs text-gray-500">WEBP, PNG, JPG (max. 5MB)</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="relative rounded-2xl overflow-hidden mt-4 border border-[#E8DCC4] shadow-sm group">
-            <img src={formData.banner} alt="Banner Preview" className="w-full h-auto object-cover aspect-[16/9]" />
+            <img src={formData.bannerUrl} alt="Banner Preview" className="w-full h-auto object-cover aspect-[16/9]" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <Button onClick={() => setFormData({ ...formData, banner: '' })} variant="secondary" className="bg-white text-red-600 hover:bg-white/90">
+              <Button onClick={() => setFormData({ ...formData, bannerUrl: '', bannerPublicId: '' })} variant="secondary" className="bg-white text-red-600 hover:bg-white/90">
                 Remove Image
               </Button>
             </div>

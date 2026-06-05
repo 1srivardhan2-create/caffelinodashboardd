@@ -3,7 +3,7 @@ import { MapPin, Calendar, Clock, IndianRupee, Users } from 'lucide-react';
 
 export default function EventPreviewCard({ formData }: any) {
   // Use a default banner if none uploaded
-  const bannerImg = formData.banner || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1200&h=675';
+  const bannerImg = formData.bannerUrl || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1200&h=675';
   
   return (
     <Card className="overflow-hidden border-none shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white sticky top-24">

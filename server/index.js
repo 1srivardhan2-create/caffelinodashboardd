@@ -11,6 +11,7 @@ const cafeRoutes = require("./routes/Cafe.routes");
 const adminRoutes = require("./routes/admin.routes");
 const orderRoutes = require("./routes/order.routes");
 const eventRoutes = require("./routes/event.routes");
+const authRoutes = require("./routes/auth.routes");
 
 app.use(cors({
   origin: [
@@ -29,6 +30,7 @@ app.use("/api/cafe", cafeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", orderRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/uploads", express.static("uploads"));
 
 mongoose

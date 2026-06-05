@@ -5,6 +5,7 @@ const EventSchema = new mongoose.Schema({
   eventName: { type: String, required: true },
   eventDescription: { type: String, required: true },
   eventCategory: { type: String, required: true },
+  tags: [{ type: String }],
 
   // STEP 2 - Event Banner
   bannerUrl: { type: String, required: true },
@@ -60,13 +61,18 @@ const EventSchema = new mongoose.Schema({
     default: 'draft' 
   },
 
+  // Analytics
+  views: { type: Number, default: 0 },
+  likes: { type: Number, default: 0 },
+  shares: { type: Number, default: 0 },
+  registrations: { type: Number, default: 0 },
+
   // Additional Fields
   approvalStatus: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
-  },
-  registrationsCount: { type: Number, default: 0 },
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', EventSchema);

@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router';
+import { useEventAuth } from '../../context/EventAuthContext';
 import { Button } from '../ui/button';
 import { 
   LayoutDashboard, 
@@ -20,9 +21,11 @@ interface EventsLayoutProps {
 export default function EventsLayout({ children }: EventsLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useEventAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
+    logout();
     navigate('/events/login');
   };
 
@@ -109,7 +112,22 @@ export default function EventsLayout({ children }: EventsLayoutProps) {
           })}
         </nav>
 
-        <div className="p-6 border-t border-[#E8DCC4] bg-[#FDFBF7]/50">
+        <div className="p-4 border-t border-[#E8DCC4] bg-[#FDFBF7]/50">
+          {user && (
+            <div className="flex items-center gap-3 mb-4 px-2">
+              <div className="size-10 rounded-full bg-gradient-to-br from-[#8B5E3C] to-[#5C3A21] flex items-center justify-center text-white overflow-hidden shadow-sm">
+                {user.profilePicture ? (
+                  <img src={user.profilePicture} alt={user.fullName} className="size-full object-cover" />
+                ) : (
+                  <span className="font-bold text-sm">{user.fullName?.charAt(0)}</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-[#3E2723] truncate">{user.fullName}</p>
+                <p className="text-xs text-[#8B5E3C] truncate">{user.email}</p>
+              </div>
+            </div>
+          )}
           <Button
             variant="outline"
             className="w-full justify-start text-[#8B5E3C] border-[#E8DCC4] hover:bg-white hover:text-[#5C3A21] rounded-xl h-12"

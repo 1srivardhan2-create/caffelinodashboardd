@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useGoogleLogin } from '@react-oauth/google';
+import { useEventAuth } from '../../context/EventAuthContext';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { toast } from 'sonner';
@@ -7,17 +9,38 @@ import { Ticket, Loader2 } from 'lucide-react';
 
 export default function EventsLogin() {
   const navigate = useNavigate();
+  const { login } = useEventAuth();
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const handleGoogleLogin = () => {
-    setLoginLoading(true);
-    // Mock login for Events Organizer
-    setTimeout(() => {
-      toast.success('Welcome to Caffelino Events!');
-      setLoginLoading(false);
-      navigate('/events/dashboard');
-    }, 1000);
-  };
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoginLoading(true);
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token: tokenResponse.access_token })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          login(data.user, data.token);
+          toast.success('Welcome to Caffelino Events!');
+          navigate('/events/dashboard');
+        } else {
+          toast.error(data.message || 'Login failed');
+        }
+      } catch (error) {
+        toast.error('An error occurred during authentication');
+      } finally {
+        setLoginLoading(false);
+      }
+    },
+    onError: () => toast.error('Google Login Failed')
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7] p-4 relative">

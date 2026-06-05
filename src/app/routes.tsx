@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { useAuth } from './context/AuthContext';
+import { useEventAuth } from './context/EventAuthContext';
 import Login from './pages/Login';
 import PartnerOnboarding from './pages/PartnerOnboarding';
 import VerificationPending from './pages/VerificationPending';
@@ -38,6 +39,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!cafe || cafe.status !== 'approved') {
     return <Navigate to="/verification-pending" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function EventsProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useEventAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8B5E3C]"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/events/login" replace />;
   }
 
   return <>{children}</>;
@@ -154,33 +173,41 @@ export const router = createBrowserRouter([
   {
     path: '/events/dashboard',
     element: (
-      <EventsLayout>
-        <EventsDashboard />
-      </EventsLayout>
+      <EventsProtectedRoute>
+        <EventsLayout>
+          <EventsDashboard />
+        </EventsLayout>
+      </EventsProtectedRoute>
     )
   },
   {
     path: '/events/earnings',
     element: (
-      <EventsLayout>
-        <EventsEarnings />
-      </EventsLayout>
+      <EventsProtectedRoute>
+        <EventsLayout>
+          <EventsEarnings />
+        </EventsLayout>
+      </EventsProtectedRoute>
     )
   },
   {
     path: '/events/create',
     element: (
-      <EventsLayout>
-        <CreateEvent />
-      </EventsLayout>
+      <EventsProtectedRoute>
+        <EventsLayout>
+          <CreateEvent />
+        </EventsLayout>
+      </EventsProtectedRoute>
     )
   },
   {
     path: '/events/manage',
     element: (
-      <EventsLayout>
-        <ManageEvents />
-      </EventsLayout>
+      <EventsProtectedRoute>
+        <EventsLayout>
+          <ManageEvents />
+        </EventsLayout>
+      </EventsProtectedRoute>
     )
   }
 ]);

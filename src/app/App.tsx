@@ -1,6 +1,7 @@
 import { RouterProvider } from 'react-router';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
+import { EventAuthProvider } from './context/EventAuthContext';
 import { OrderProvider } from './context/OrderContext';
 import { Toaster } from './components/ui/sonner';
 import { router } from './routes';
@@ -11,10 +12,12 @@ export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
-        <OrderProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </OrderProvider>
+        <EventAuthProvider>
+          <OrderProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </OrderProvider>
+        </EventAuthProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
   );

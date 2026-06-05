@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { useEventAuth } from '../../context/EventAuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
@@ -21,11 +22,14 @@ export default function CreateEvent() {
   const totalSteps = 7;
   const [isPublished, setIsPublished] = useState(false);
 
+  const { user } = useEventAuth();
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     category: '',
-    banner: '',
+    bannerUrl: '',
+    bannerPublicId: '',
     cafe: '',
     venue: '',
     address: '',
@@ -52,6 +56,16 @@ export default function CreateEvent() {
     panNumber: '',
     gstNumber: '',
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        orgName: prev.orgName || user.fullName,
+        email: prev.email || user.email
+      }));
+    }
+  }, [user]);
 
   const [errors, setErrors] = useState({
     accNumber: '',
@@ -96,7 +110,9 @@ export default function CreateEvent() {
     navigate('/events/manage');
   };
 
-  const handlePublish = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handlePublish = async () => {
     if (currentStep === 7) {
       if (!validatePayment()) {
         toast.error('Please fix payment details errors.');
@@ -109,8 +125,57 @@ export default function CreateEvent() {
       }
     }
     
-    setIsPublished(true);
-    toast.success('Event published successfully!');
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        eventName: formData.name,
+        eventDescription: formData.description,
+        eventCategory: formData.category,
+        bannerUrl: formData.bannerUrl,
+        bannerPublicId: formData.bannerPublicId,
+        cafeName: formData.cafe,
+        venueName: formData.venue,
+        address: formData.address,
+        googleMapsLink: formData.mapsLink,
+        eventDate: formData.date,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        ticketType: formData.isPaid ? 'paid' : 'free',
+        ticketPrice: formData.price,
+        maxSeats: formData.maxSeats,
+        organizerName: formData.orgName,
+        email: formData.email,
+        phone: formData.phone,
+        instagramLink: formData.instagram,
+        websiteLink: formData.website,
+        accountHolderName: formData.accHolderName,
+        bankName: formData.bankName,
+        accountNumber: formData.accNumber,
+        ifscCode: formData.ifscCode,
+        upiId: formData.upiId,
+        panNumber: formData.panNumber,
+        gstNumber: formData.gstNumber,
+        organizerId: user?.id,
+      };
+
+      const response = await fetch('http://localhost:5000/api/events/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsPublished(true);
+        toast.success('Event published successfully!');
+      } else {
+        toast.error(data.message || 'Failed to publish event');
+      }
+    } catch (error) {
+      toast.error('An error occurred during publishing');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const stepTitles = [
@@ -291,10 +356,11 @@ export default function CreateEvent() {
               ) : (
                 <Button
                   onClick={handlePublish}
+                  disabled={isSubmitting}
                   className="bg-gradient-to-r from-[#8B5E3C] to-[#5C3A21] text-white hover:shadow-lg hover:shadow-[#8B5E3C]/30 px-8 border-none"
                 >
-                  Publish Event
-                  <CheckCircle2 className="ml-2 size-4" />
+                  {isSubmitting ? 'Publishing...' : 'Publish Event'}
+                  {!isSubmitting && <CheckCircle2 className="ml-2 size-4" />}
                 </Button>
               )}
             </div>

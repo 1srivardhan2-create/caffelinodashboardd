@@ -4,14 +4,61 @@ const Ticket = require('../models/Ticket.model');
 const Payment = require('../models/Payment.model');
 const Settlement = require('../models/Settlement.model');
 const { encrypt, decrypt } = require('../utils/cryptoHelper');
-const { deleteFromCloudinary, uploadBufferToCloudinary } = require('../utils/cloudinaryUpload');
+const uploadBuffer = require('../utils/uploadToCloudinary');
+const cloudinary = require('../config/cloudinary');
 const qrcode = require('qrcode');
+
+// Helper to delete from Cloudinary using existing config
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
+      console.log(`Deleted image from Cloudinary: ${publicId}`);
+    }
+  } catch (error) {
+    console.error(`Failed to delete image from Cloudinary (${publicId}):`, error);
+  }
+};
+
+// Upload Banner Endpoint
+exports.uploadBanner = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    
+    // Check file size (5MB limit)
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: 'File exceeds 5MB limit' });
+    }
+
+    // Upload to existing Cloudinary setup using uploadBuffer from server/utils
+    const folder = 'caffelino/events/banners';
+    const secureUrl = await uploadBuffer(req.file.buffer, folder);
+    
+    // Extract publicId roughly from URL (or just save the URL)
+    // Cloudinary URL format: https://res.cloudinary.com/<cloud_name>/image/upload/v<version>/<folder>/<filename>.<ext>
+    const urlParts = secureUrl.split('/');
+    const filename = urlParts.pop().split('.')[0];
+    const publicId = `${folder}/${filename}`;
+
+    res.status(200).json({
+      success: true,
+      bannerUrl: secureUrl,
+      publicId: publicId
+    });
+  } catch (error) {
+    console.error('Banner Upload Error:', error);
+    res.status(500).json({ success: false, message: 'Upload failed', error: error.message });
+  }
+};
 
 // Create Event
 exports.createEvent = async (req, res) => {
   try {
     const {
-      eventName, eventDescription, eventCategory,
+      eventName, eventDescription, eventCategory, tags,
+      bannerUrl, bannerPublicId,
       cafeId, cafeName, venueName, address, googleMapsLink, city, state, country, pincode, latitude, longitude,
       eventDate, startTime, endTime, timezone,
       ticketType, ticketPrice, maxSeats, availableSeats,
@@ -19,7 +66,7 @@ exports.createEvent = async (req, res) => {
       accountHolderName, bankName, accountNumber, ifscCode, upiId, panNumber, gstNumber
     } = req.body;
 
-    if (!req.file) {
+    if (!bannerUrl || !bannerPublicId) {
       return res.status(400).json({ success: false, message: 'Event banner is required' });
     }
 
@@ -35,9 +82,8 @@ exports.createEvent = async (req, res) => {
     };
 
     const newEvent = new Event({
-      eventName, eventDescription, eventCategory,
-      bannerUrl: req.file.path,
-      bannerPublicId: req.file.filename,
+      eventName, eventDescription, eventCategory, tags,
+      bannerUrl, bannerPublicId,
       cafeId, cafeName, venueName, address, googleMapsLink, city, state, country, pincode, latitude, longitude,
       eventDate, startTime, endTime, timezone,
       ticketType, ticketPrice: ticketType === 'free' ? 0 : ticketPrice,
@@ -64,12 +110,6 @@ exports.updateEvent = async (req, res) => {
 
     const event = await Event.findById(id);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
-
-    if (req.file) {
-      await deleteFromCloudinary(event.bannerPublicId);
-      updateData.bannerUrl = req.file.path;
-      updateData.bannerPublicId = req.file.filename;
-    }
 
     // Handle encryption if bank details are updated
     const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId', 'panNumber', 'gstNumber'];
@@ -220,9 +260,9 @@ exports.registerEvent = async (req, res) => {
       const qrBuffer = await qrcode.toBuffer(qrData, { type: 'png', width: 300 });
       
       // Upload QR Code to Cloudinary
-      const qrUpload = await uploadBufferToCloudinary(qrBuffer, 'caffelino/qrcodes', `qr_${ticketNumber}`);
+      const secureUrl = await uploadBuffer(qrBuffer, 'caffelino/events/qrcodes');
       
-      ticket.qrCodeUrl = qrUpload.secure_url;
+      ticket.qrCodeUrl = secureUrl;
       await ticket.save();
 
       generatedTickets.push(ticket);
@@ -314,3 +354,61 @@ exports.getEarningsStats = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error fetching earnings stats', error: error.message });
   }
 };
+
+// Get My Events
+exports.getMyEvents = async (req, res) => {
+  try {
+    const organizerId = req.user?.userId; // Needs auth middleware protecting this route
+    if (!organizerId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const events = await Event.find({ organizerId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, events });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching my events', error: error.message });
+  }
+};
+
+// Analytics API
+exports.getEventAnalytics = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+    
+    const analytics = {
+      views: event.views,
+      likes: event.likes,
+      shares: event.shares,
+      registrations: event.registrations,
+      ticketsSold: event.ticketsSold,
+      revenue: event.ticketsSold * event.ticketPrice
+    };
+    
+    res.status(200).json({ success: true, analytics });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching analytics', error: error.message });
+  }
+};
+
+// Get Registrations for an Event
+exports.getEventRegistrations = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const registrations = await Registration.find({ eventId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, registrations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching registrations', error: error.message });
+  }
+};
+
+// Export Registrations (CSV mock)
+exports.exportEventRegistrations = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const registrations = await Registration.find({ eventId });
+    res.status(200).json({ success: true, message: 'Export successful', data: registrations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error exporting registrations', error: error.message });
+  }
+};
+
