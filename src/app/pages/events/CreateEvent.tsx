@@ -197,6 +197,11 @@ export default function CreateEvent() {
         email: formData.email,
         phone: formData.phone,
         eventInstagramId: formData.eventInstagramId,
+        accountHolderName: formData.accHolderName,
+        bankName: formData.bankName,
+        accountNumber: formData.accNumber,
+        ifscCode: formData.ifscCode,
+        upiId: formData.upiId,
         organizerId: user?.id,
       };
 
