@@ -414,7 +414,7 @@ exports.getEarningsStats = async (req, res) => {
 // Get My Events
 exports.getMyEvents = async (req, res) => {
   try {
-    const organizerId = req.user?.userId; // Needs auth middleware protecting this route
+    const organizerId = req.query.organizerId || req.user?.userId; // Needs auth middleware protecting this route
     if (!organizerId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const events = await Event.find({ organizerId }).sort({ createdAt: -1 });

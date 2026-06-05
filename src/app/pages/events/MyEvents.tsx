@@ -5,15 +5,18 @@ import { Button } from '../../components/ui/button';
 import { motion } from 'motion/react';
 import { PlusCircle, Calendar, MapPin, Ticket, IndianRupee, MoreVertical, Edit, Trash2, Globe, EyeOff, Eye, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEventAuth } from '../../context/EventAuthContext';
 
 export default function MyEvents() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const { user } = useEventAuth();
+
   const fetchEvents = async () => {
     try {
-      const res = await api.get('/api/events/my-events');
+      const res = await api.get(`/api/events/my-events?organizerId=${user?.id}`);
       if (res.success) {
         setEvents(res.events);
       }
