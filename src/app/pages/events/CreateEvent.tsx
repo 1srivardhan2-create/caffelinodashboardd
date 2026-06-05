@@ -200,7 +200,7 @@ export default function CreateEvent() {
         organizerId: user?.id,
       };
 
-      const endpoint = eventStatus === 'active' && draftId ? `/api/events/update/${draftId}` : '/api/events/save-draft';
+      const endpoint = eventStatus === 'published' && draftId ? `/api/events/update/${draftId}` : '/api/events/save-draft';
       const res = await api.post(endpoint, payload);
       
       if (res.success && res.event && eventStatus === 'draft') {
@@ -209,7 +209,7 @@ export default function CreateEvent() {
           localStorage.setItem('currentDraftId', res.event._id);
         }
         toast.success('Draft Saved');
-      } else if (res.success && eventStatus === 'active') {
+      } else if (res.success && eventStatus === 'published') {
         toast.success('Changes Saved');
       }
     } catch (err) {
@@ -288,8 +288,8 @@ export default function CreateEvent() {
       };
 
       let data;
-      if (draftId && eventStatus === 'active') {
-        // Just update it and don't change status to active again, it's already active
+      if (draftId && eventStatus === 'published') {
+        // Just update it and don't change status to published again, it's already published
         data = await api.post(`/api/events/update/${draftId}`, payload);
         if (data.success) {
           setIsPublished(true);

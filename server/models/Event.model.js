@@ -54,7 +54,7 @@ const EventSchema = new mongoose.Schema({
   // EVENT STATUS
   status: { 
     type: String, 
-    enum: ['draft', 'active', 'completed', 'cancelled'], 
+    enum: ['draft', 'published', 'completed', 'cancelled'], 
     default: 'draft' 
   },
 
@@ -63,6 +63,9 @@ const EventSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   shares: { type: Number, default: 0 },
   registrations: { type: Number, default: 0 },
+
+  // Featured
+  isFeatured: { type: Boolean, default: false },
 
   // Additional Fields
   approvalStatus: {

@@ -30,10 +30,10 @@ export default function MyEvents() {
 
   const handlePublish = async (id: string, currentStatus: string) => {
     try {
-      const endpoint = currentStatus === 'active' ? `/api/events/unpublish/${id}` : `/api/events/publish/${id}`;
+      const endpoint = currentStatus === 'published' ? `/api/events/unpublish/${id}` : `/api/events/publish/${id}`;
       const res = await api.post(endpoint, {});
       if (res.success) {
-        toast.success(`Event ${currentStatus === 'active' ? 'unpublished' : 'published'}`);
+        toast.success(`Event ${currentStatus === 'published' ? 'unpublished' : 'published'}`);
         fetchEvents();
       } else {
         toast.error(res.message);
@@ -114,7 +114,7 @@ export default function MyEvents() {
                 )}
                 <div className="absolute top-3 left-3 flex gap-2">
                   <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md backdrop-blur-md shadow-sm ${
-                    event.status === 'active' ? 'bg-green-500/90 text-white' : 
+                    event.status === 'published' ? 'bg-green-500/90 text-white' : 
                     event.status === 'draft' ? 'bg-orange-500/90 text-white' : 
                     'bg-gray-500/90 text-white'
                   }`}>
@@ -155,7 +155,7 @@ export default function MyEvents() {
                     <Edit className="size-4 mr-1.5" /> Edit
                   </Button>
                   
-                  {event.status === 'active' ? (
+                  {event.status === 'published' ? (
                     <Button 
                       variant="outline" 
                       size="sm" 

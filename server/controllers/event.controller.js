@@ -112,7 +112,7 @@ exports.createEvent = async (req, res) => {
       maxSeats, availableSeats: maxSeats,
       organizerName, email, phone, eventInstagramId, organizerId,
       ...encryptedBankDetails,
-      status: 'active'
+      status: 'published'
     });
 
     await newEvent.save();
@@ -225,7 +225,7 @@ exports.publishEvent = async (req, res) => {
       });
     }
 
-    event.status = 'active';
+    event.status = 'published';
     await event.save();
 
     res.status(200).json({ success: true, message: 'Event published', event });
@@ -370,7 +370,7 @@ exports.getDashboardStats = async (req, res) => {
 
     const stats = {
       totalEvents: events.length,
-      activeEvents: events.filter(e => e.status === 'active').length,
+      activeEvents: events.filter(e => e.status === 'published').length,
       upcomingEvents: events.filter(e => new Date(e.eventDate) > new Date()).length,
       completedEvents: events.filter(e => e.status === 'completed').length,
       cancelledEvents: events.filter(e => e.status === 'cancelled').length,
