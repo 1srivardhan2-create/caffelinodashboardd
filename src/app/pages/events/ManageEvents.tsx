@@ -17,48 +17,7 @@ export default function ManageEvents() {
   ];
 
   // Mock data for events
-  const mockEvents = [
-    {
-      id: 1,
-      name: 'Acoustic Evening with John',
-      date: 'Oct 24, 2026',
-      venue: 'Caffelino Downtown',
-      status: 'active',
-      ticketsSold: 45,
-      revenue: '₹ 22,500',
-      banner: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=600&h=400',
-    },
-    {
-      id: 2,
-      name: 'Coffee Tasting Workshop',
-      date: 'Nov 02, 2026',
-      venue: 'Caffelino Westside',
-      status: 'active',
-      ticketsSold: 12,
-      revenue: '₹ 18,000',
-      banner: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=600&h=400',
-    },
-    {
-      id: 3,
-      name: 'Open Mic Night',
-      date: 'TBD',
-      venue: 'TBD',
-      status: 'drafts',
-      ticketsSold: 0,
-      revenue: '₹ 0',
-      banner: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=600&h=400',
-    },
-    {
-      id: 4,
-      name: 'Jazz & Beans',
-      date: 'Sep 15, 2026',
-      venue: 'Caffelino Downtown',
-      status: 'completed',
-      ticketsSold: 60,
-      revenue: '₹ 30,000',
-      banner: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=600&h=400',
-    }
-  ];
+  const mockEvents: any[] = [];
 
   const filteredEvents = mockEvents.filter(e => e.status === activeTab);
 

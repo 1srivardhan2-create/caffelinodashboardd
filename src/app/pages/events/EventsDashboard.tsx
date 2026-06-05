@@ -16,10 +16,10 @@ export default function EventsDashboard() {
   const navigate = useNavigate();
 
   const stats = [
-    { label: 'Total Events', value: '24', icon: CalendarDays, color: 'from-[#8B5E3C] to-[#5C3A21]' },
-    { label: 'Tickets Sold', value: '1,248', icon: Ticket, color: 'from-[#C19A6B] to-[#A87B45]' },
-    { label: 'Total Revenue', value: '₹ 4.2L', icon: IndianRupee, color: 'from-[#2C3E50] to-[#1A252F]' },
-    { label: 'Upcoming Events', value: '3', icon: Flame, color: 'from-[#E67E22] to-[#D35400]' },
+    { label: 'Total Events', value: '0', icon: CalendarDays, color: 'from-[#8B5E3C] to-[#5C3A21]' },
+    { label: 'Tickets Sold', value: '0', icon: Ticket, color: 'from-[#C19A6B] to-[#A87B45]' },
+    { label: 'Total Revenue', value: '₹ 0', icon: IndianRupee, color: 'from-[#2C3E50] to-[#1A252F]' },
+    { label: 'Upcoming Events', value: '0', icon: Flame, color: 'from-[#E67E22] to-[#D35400]' },
   ];
 
   const actions = [

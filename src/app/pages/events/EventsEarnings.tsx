@@ -5,18 +5,13 @@ import { IndianRupee, Clock, CheckCircle2, Ticket, Download, ChevronRight } from
 
 export default function EventsEarnings() {
   const stats = [
-    { label: 'Total Revenue', value: '₹ 4,20,500', icon: IndianRupee, color: 'text-[#3E2723]', bg: 'bg-[#FDFBF7]', border: 'border-[#E8DCC4]' },
-    { label: 'Pending Settlements', value: '₹ 85,000', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-    { label: 'Completed Settlements', value: '₹ 3,35,500', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-    { label: 'Total Tickets Sold', value: '1,248', icon: Ticket, color: 'text-[#8B5E3C]', bg: 'bg-[#F5E6D3]', border: 'border-[#E8DCC4]' },
+    { label: 'Total Revenue', value: '₹ 0', icon: IndianRupee, color: 'text-[#3E2723]', bg: 'bg-[#FDFBF7]', border: 'border-[#E8DCC4]' },
+    { label: 'Pending Settlements', value: '₹ 0', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { label: 'Completed Settlements', value: '₹ 0', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+    { label: 'Total Tickets Sold', value: '0', icon: Ticket, color: 'text-[#8B5E3C]', bg: 'bg-[#F5E6D3]', border: 'border-[#E8DCC4]' },
   ];
 
-  const recentTransactions = [
-    { id: 'TRX-9821', event: 'Acoustic Evening with John', amount: '₹ 22,500', date: 'Oct 24, 2026', status: 'completed' },
-    { id: 'TRX-9822', event: 'Coffee Tasting Workshop', amount: '₹ 18,000', date: 'Nov 02, 2026', status: 'pending' },
-    { id: 'TRX-9819', event: 'Jazz & Beans', amount: '₹ 30,000', date: 'Sep 15, 2026', status: 'completed' },
-    { id: 'TRX-9815', event: 'Latte Art Masterclass', amount: '₹ 15,000', date: 'Aug 20, 2026', status: 'completed' },
-  ];
+  const recentTransactions: any[] = [];
 
   const containerVariants = {
     hidden: { opacity: 0 },
