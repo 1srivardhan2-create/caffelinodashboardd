@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 4000;
 const cafeRoutes = require("./routes/Cafe.routes");
 const adminRoutes = require("./routes/admin.routes");
 const orderRoutes = require("./routes/order.routes");
+const eventRoutes = require("./routes/event.routes");
 
 app.use(cors({
   origin: [
@@ -27,6 +28,7 @@ app.use(cookieParser());
 app.use("/api/cafe", cafeRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", orderRoutes);
+app.use("/api/events", eventRoutes);
 app.use("/uploads", express.static("uploads"));
 
 mongoose
