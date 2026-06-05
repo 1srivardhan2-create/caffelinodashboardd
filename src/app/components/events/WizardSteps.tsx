@@ -533,8 +533,6 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
           </div>
         </div>
       </div>
-
-      </div>
     </div>
   );
 };
