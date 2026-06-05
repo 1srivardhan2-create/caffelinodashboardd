@@ -191,6 +191,52 @@ export const Step3Location = ({ formData, setFormData }: any) => {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="city" className="text-[#3E2723] font-semibold">City</Label>
+          <Input 
+            id="city" 
+            value={formData.city} 
+            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            placeholder="e.g. Mumbai" 
+            className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="state" className="text-[#3E2723] font-semibold">State</Label>
+          <Input 
+            id="state" 
+            value={formData.state} 
+            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+            placeholder="e.g. Maharashtra" 
+            className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="country" className="text-[#3E2723] font-semibold">Country</Label>
+          <Input 
+            id="country" 
+            value={formData.country} 
+            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+            placeholder="e.g. India" 
+            className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="pincode" className="text-[#3E2723] font-semibold">Pincode</Label>
+          <Input 
+            id="pincode" 
+            value={formData.pincode} 
+            onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+            placeholder="e.g. 400001" 
+            className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="maps" className="text-[#3E2723] font-semibold">Google Maps Link</Label>
         <div className="relative">
@@ -364,10 +410,15 @@ export const Step6Organizer = ({ formData, setFormData }: any) => {
           <Label htmlFor="phone" className="text-[#3E2723] font-semibold">Phone Number</Label>
           <Input 
             id="phone" 
-            type="tel"
+            type="text"
             value={formData.phone} 
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="+91 98765 43210" 
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '');
+              if (val.length <= 10) {
+                setFormData({ ...formData, phone: val });
+              }
+            }}
+            placeholder="10 digit number" 
             className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
           />
         </div>

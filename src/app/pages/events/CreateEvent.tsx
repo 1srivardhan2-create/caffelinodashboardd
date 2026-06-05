@@ -35,6 +35,10 @@ export default function CreateEvent() {
     venue: '',
     address: '',
     mapsLink: '',
+    city: '',
+    state: '',
+    country: '',
+    pincode: '',
     date: '',
     startTime: '',
     endTime: '',
@@ -98,6 +102,14 @@ export default function CreateEvent() {
     return isValid;
   };
 
+  const validatePhone = () => {
+    if (formData.phone.length !== 10) {
+      toast.error('Phone number must be exactly 10 digits.');
+      return false;
+    }
+    return true;
+  };
+
   const handleNext = () => {
     if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
   };
@@ -114,6 +126,8 @@ export default function CreateEvent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePublish = async () => {
+    if (!validatePhone()) return;
+
     if (currentStep === 7) {
       if (!validatePayment()) {
         toast.error('Please fix payment details errors.');
@@ -138,6 +152,10 @@ export default function CreateEvent() {
         venueName: formData.venue,
         address: formData.address,
         googleMapsLink: formData.mapsLink,
+        city: formData.city || 'Default City',
+        state: formData.state || 'Default State',
+        country: formData.country || 'Default Country',
+        pincode: formData.pincode || '000000',
         eventDate: formData.date,
         startTime: formData.startTime,
         endTime: formData.endTime,
