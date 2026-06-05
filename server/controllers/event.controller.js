@@ -53,6 +53,34 @@ exports.uploadBanner = async (req, res) => {
   }
 };
 
+// Save Draft
+exports.saveDraft = async (req, res) => {
+  try {
+    const { _id, ...eventData } = req.body;
+    
+    // Encrypt sensitive bank details if present
+    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId', 'panNumber', 'gstNumber'];
+    sensitiveFields.forEach(field => {
+      if (eventData[field]) {
+        eventData[field] = encrypt(eventData[field]);
+      }
+    });
+
+    let draftEvent;
+    if (_id) {
+      draftEvent = await Event.findByIdAndUpdate(_id, { ...eventData, status: 'draft' }, { new: true, upsert: true });
+    } else {
+      draftEvent = new Event({ ...eventData, status: 'draft' });
+      await draftEvent.save();
+    }
+
+    res.status(200).json({ success: true, message: 'Draft saved successfully', event: draftEvent });
+  } catch (error) {
+    console.error('Save Draft Error:', error);
+    res.status(500).json({ success: false, message: 'Error saving draft', error: error.message });
+  }
+};
+
 // Create Event
 exports.createEvent = async (req, res) => {
   try {
@@ -65,10 +93,6 @@ exports.createEvent = async (req, res) => {
       organizerName, email, phone, instagramLink, websiteLink, organizerId,
       accountHolderName, bankName, accountNumber, ifscCode, upiId, panNumber, gstNumber
     } = req.body;
-
-    if (!bannerUrl || !bannerPublicId) {
-      return res.status(400).json({ success: false, message: 'Event banner is required' });
-    }
 
     // Encrypt sensitive bank details
     const encryptedBankDetails = {
@@ -90,7 +114,7 @@ exports.createEvent = async (req, res) => {
       maxSeats, availableSeats: maxSeats,
       organizerName, email, phone, instagramLink, websiteLink, organizerId,
       ...encryptedBankDetails,
-      status: 'draft'
+      status: 'active'
     });
 
     await newEvent.save();
@@ -184,18 +208,54 @@ exports.getEventById = async (req, res) => {
 // Publish Event
 exports.publishEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.body.id || req.params.id, { status: 'active' }, { new: true });
+    const { id } = req.params;
+    const event = await Event.findById(id);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+    
+    // Strict Validation before publishing
+    const requiredFields = [
+      'eventName', 'eventDescription', 'eventCategory', 'bannerUrl', 
+      'venueName', 'address', 'city', 'state', 'country', 'pincode', 
+      'eventDate', 'startTime', 'endTime', 'ticketType', 'maxSeats', 
+      'organizerName', 'email', 'phone'
+    ];
+
+    const missingFields = requiredFields.filter(field => !event[field]);
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot publish. Missing required fields.',
+        missingFields 
+      });
+    }
+
+    event.status = 'active';
+    await event.save();
+
     res.status(200).json({ success: true, message: 'Event published', event });
   } catch (error) {
+    console.error('Publish Event Error:', error);
     res.status(500).json({ success: false, message: 'Error publishing event', error: error.message });
+  }
+};
+
+// Unpublish Event
+exports.unpublishEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await Event.findByIdAndUpdate(id, { status: 'draft' }, { new: true });
+    if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+    res.status(200).json({ success: true, message: 'Event unpublished', event });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error unpublishing event', error: error.message });
   }
 };
 
 // Cancel Event
 exports.cancelEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.body.id || req.params.id, { status: 'cancelled' }, { new: true });
+    const { id } = req.params;
+    const event = await Event.findByIdAndUpdate(id, { status: 'cancelled' }, { new: true });
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
     res.status(200).json({ success: true, message: 'Event cancelled', event });
   } catch (error) {

@@ -8,39 +8,39 @@ const EventSchema = new mongoose.Schema({
   tags: [{ type: String }],
 
   // STEP 2 - Event Banner
-  bannerUrl: { type: String, required: true },
-  bannerPublicId: { type: String, required: true },
+  bannerUrl: { type: String },
+  bannerPublicId: { type: String },
 
   // STEP 3 - Location
-  cafeId: { type: String }, // Optional, as it might be an external venue
+  cafeId: { type: String },
   cafeName: { type: String },
-  venueName: { type: String, required: true },
-  address: { type: String, required: true },
+  venueName: { type: String },
+  address: { type: String },
   googleMapsLink: { type: String },
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  country: { type: String, required: true },
-  pincode: { type: String, required: true },
+  city: { type: String },
+  state: { type: String },
+  country: { type: String },
+  pincode: { type: String },
   latitude: { type: Number },
   longitude: { type: Number },
 
   // STEP 4 - Date & Time
-  eventDate: { type: Date, required: true },
-  startTime: { type: String, required: true }, // Format HH:mm
-  endTime: { type: String, required: true },
+  eventDate: { type: Date },
+  startTime: { type: String },
+  endTime: { type: String },
   timezone: { type: String, default: 'Asia/Kolkata' },
 
   // STEP 5 - Tickets
-  ticketType: { type: String, enum: ['free', 'paid'], required: true },
+  ticketType: { type: String, enum: ['free', 'paid'] },
   ticketPrice: { type: Number, default: 0 },
-  maxSeats: { type: Number, required: true },
-  availableSeats: { type: Number, required: true },
+  maxSeats: { type: Number },
+  availableSeats: { type: Number },
   ticketsSold: { type: Number, default: 0 },
 
   // STEP 6 - Organizer Information
-  organizerName: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
+  organizerName: { type: String },
+  email: { type: String },
+  phone: { type: String },
   instagramLink: { type: String },
   websiteLink: { type: String },
   organizerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

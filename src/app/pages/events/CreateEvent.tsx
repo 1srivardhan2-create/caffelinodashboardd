@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
+import { api } from '../../../services/api';
 import { api } from '../../../services/api';
 import { useEventAuth } from '../../context/EventAuthContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,9 +20,13 @@ import EventPreviewCard from '../../components/events/EventPreviewCard';
 
 export default function CreateEvent() {
   const navigate = useNavigate();
+  const { eventId } = useParams();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 7;
   const [isPublished, setIsPublished] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(eventId || localStorage.getItem('currentDraftId'));
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [eventStatus, setEventStatus] = useState<string>('draft');
 
   const { user } = useEventAuth();
 
@@ -72,6 +77,58 @@ export default function CreateEvent() {
     }
   }, [user]);
 
+  // Load draft or edit event on mount
+  useEffect(() => {
+    const loadDraft = async () => {
+      const idToLoad = eventId || draftId;
+      if (idToLoad) {
+        try {
+          const data = await api.get(`/api/events/${idToLoad}`);
+          if (data.success && data.event) {
+            const ev = data.event;
+            setEventStatus(ev.status);
+            setFormData(prev => ({
+              ...prev,
+              name: ev.eventName || '',
+              description: ev.eventDescription || '',
+              category: ev.eventCategory || '',
+              bannerUrl: ev.bannerUrl || '',
+              bannerPublicId: ev.bannerPublicId || '',
+              cafe: ev.cafeName || '',
+              venue: ev.venueName || '',
+              address: ev.address || '',
+              mapsLink: ev.googleMapsLink || '',
+              city: ev.city || '',
+              state: ev.state || '',
+              country: ev.country || '',
+              pincode: ev.pincode || '',
+              date: ev.eventDate ? new Date(ev.eventDate).toISOString().split('T')[0] : '',
+              startTime: ev.startTime || '',
+              endTime: ev.endTime || '',
+              isPaid: ev.ticketType === 'paid',
+              price: ev.ticketPrice?.toString() || '',
+              maxSeats: ev.maxSeats?.toString() || '',
+              orgName: ev.organizerName || user?.fullName || '',
+              email: ev.email || user?.email || '',
+              phone: ev.phone || '',
+              instagram: ev.instagramLink || '',
+              website: ev.websiteLink || '',
+            }));
+            if (!eventId) {
+              toast.success('Draft restored successfully');
+            }
+          } else if (!eventId) {
+            localStorage.removeItem('currentDraftId');
+            setDraftId(null);
+          }
+        } catch (err) {
+          console.error('Failed to load event');
+        }
+      }
+    };
+    loadDraft();
+  }, [eventId, draftId, user]);
+
   const [errors, setErrors] = useState({
     accNumber: '',
     confirmAccNumber: '',
@@ -110,8 +167,62 @@ export default function CreateEvent() {
     return true;
   };
 
+  const triggerAutoSave = async () => {
+    setIsSavingDraft(true);
+    try {
+      const payload = {
+        ...(draftId ? { _id: draftId } : {}),
+        eventName: formData.name,
+        eventDescription: formData.description,
+        eventCategory: formData.category,
+        bannerUrl: formData.bannerUrl,
+        bannerPublicId: formData.bannerPublicId,
+        cafeName: formData.cafe,
+        venueName: formData.venue,
+        address: formData.address,
+        googleMapsLink: formData.mapsLink,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+        pincode: formData.pincode,
+        eventDate: formData.date || null,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        ticketType: formData.isPaid ? 'paid' : 'free',
+        ticketPrice: Number(formData.price) || 0,
+        maxSeats: Number(formData.maxSeats) || 0,
+        organizerName: formData.orgName,
+        email: formData.email,
+        phone: formData.phone,
+        instagramLink: formData.instagram,
+        websiteLink: formData.website,
+        organizerId: user?.id,
+      };
+
+      const endpoint = eventStatus === 'active' && draftId ? `/api/events/update/${draftId}` : '/api/events/save-draft';
+      const res = await api.post(endpoint, payload);
+      
+      if (res.success && res.event && eventStatus === 'draft') {
+        setDraftId(res.event._id);
+        if (!eventId) {
+          localStorage.setItem('currentDraftId', res.event._id);
+        }
+        toast.success('Draft Saved');
+      } else if (res.success && eventStatus === 'active') {
+        toast.success('Changes Saved');
+      }
+    } catch (err) {
+      console.error('Auto save failed', err);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   const handleNext = () => {
-    if (currentStep < totalSteps) setCurrentStep(currentStep + 1);
+    if (currentStep < totalSteps) {
+      triggerAutoSave();
+      setCurrentStep(currentStep + 1);
+    }
   };
 
   const handleBack = () => {
@@ -119,8 +230,8 @@ export default function CreateEvent() {
   };
 
   const handleSaveDraft = () => {
-    toast.success('Event draft saved successfully!');
-    navigate('/events/manage');
+    triggerAutoSave();
+    navigate('/events/dashboard');
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -143,6 +254,7 @@ export default function CreateEvent() {
     setIsSubmitting(true);
     try {
       const payload = {
+        ...(draftId ? { _id: draftId } : {}),
         eventName: formData.name,
         eventDescription: formData.description,
         eventCategory: formData.category,
@@ -177,11 +289,33 @@ export default function CreateEvent() {
         organizerId: user?.id,
       };
 
-      const data = await api.post('/api/events/create', payload);
+      let data;
+      if (draftId && eventStatus === 'active') {
+        // Just update it and don't change status to active again, it's already active
+        data = await api.post(`/api/events/update/${draftId}`, payload);
+        if (data.success) {
+          setIsPublished(true);
+          if (!eventId) localStorage.removeItem('currentDraftId');
+          toast.success('Event updated successfully!');
+        } else {
+          toast.error(data.message || 'Failed to update event');
+        }
+        return;
+      }
+
+      data = await api.post(draftId ? `/api/events/update/${draftId}` : '/api/events/create', payload);
 
       if (data.success) {
-        setIsPublished(true);
-        toast.success('Event published successfully!');
+        const idToPublish = data.event._id;
+        const publishRes = await api.post(`/api/events/publish/${idToPublish}`, {});
+        if (publishRes.success) {
+          setIsPublished(true);
+          localStorage.removeItem('currentDraftId');
+          setDraftId(null);
+          toast.success('Event published successfully!');
+        } else {
+          toast.error(publishRes.message || 'Saved but failed to publish.');
+        }
       } else {
         toast.error(data.message || 'Failed to publish event');
       }
@@ -278,17 +412,18 @@ export default function CreateEvent() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#3E2723] tracking-tight">Create New Event</h1>
+          <h1 className="text-3xl font-extrabold text-[#3E2723] tracking-tight">{eventId ? 'Edit Event' : 'Create New Event'}</h1>
           <p className="text-[#8B5E3C] mt-2">Fill in the details to host a premium experience.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button 
             variant="outline" 
             onClick={handleSaveDraft}
+            disabled={isSavingDraft}
             className="border-[#E8DCC4] text-[#8B5E3C] hover:bg-[#F5E6D3]/50 hover:text-[#5C3A21]"
           >
             <Save className="mr-2 size-4" />
-            Save Draft
+            {isSavingDraft ? 'Saving...' : 'Save Draft'}
           </Button>
           <Button 
             onClick={handlePublish}

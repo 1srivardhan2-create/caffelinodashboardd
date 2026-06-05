@@ -1,4 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { api } from '../../../services/api';
+import { useEventAuth } from '../../context/EventAuthContext';
 import { motion } from 'motion/react';
 import { 
   CalendarDays, 
@@ -14,12 +17,39 @@ import { Card } from '../../components/ui/card';
 
 export default function EventsDashboard() {
   const navigate = useNavigate();
+  const { user } = useEventAuth();
+  const [statsData, setStatsData] = useState({
+    totalEvents: 0,
+    activeEvents: 0,
+    upcomingEvents: 0,
+    completedEvents: 0,
+    cancelledEvents: 0,
+    totalTicketsSold: 0,
+    totalRegistrations: 0,
+    totalRevenue: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (user?.id) {
+        try {
+          const res = await api.get(`/api/events/dashboard?organizerId=${user.id}`);
+          if (res.success) {
+            setStatsData(res.stats);
+          }
+        } catch (err) {
+          console.error("Failed to load dashboard stats", err);
+        }
+      }
+    };
+    fetchStats();
+  }, [user]);
 
   const stats = [
-    { label: 'Total Events', value: '0', icon: CalendarDays, color: 'from-[#8B5E3C] to-[#5C3A21]' },
-    { label: 'Tickets Sold', value: '0', icon: Ticket, color: 'from-[#C19A6B] to-[#A87B45]' },
-    { label: 'Total Revenue', value: '₹ 0', icon: IndianRupee, color: 'from-[#2C3E50] to-[#1A252F]' },
-    { label: 'Upcoming Events', value: '0', icon: Flame, color: 'from-[#E67E22] to-[#D35400]' },
+    { label: 'Total Events', value: statsData.totalEvents.toString(), icon: CalendarDays, color: 'from-[#8B5E3C] to-[#5C3A21]' },
+    { label: 'Tickets Sold', value: statsData.totalTicketsSold.toString(), icon: Ticket, color: 'from-[#C19A6B] to-[#A87B45]' },
+    { label: 'Total Revenue', value: `₹ ${statsData.totalRevenue}`, icon: IndianRupee, color: 'from-[#2C3E50] to-[#1A252F]' },
+    { label: 'Upcoming Events', value: statsData.upcomingEvents.toString(), icon: Flame, color: 'from-[#E67E22] to-[#D35400]' },
   ];
 
   const actions = [

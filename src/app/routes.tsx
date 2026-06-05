@@ -21,6 +21,7 @@ import EventsDashboard from './pages/events/EventsDashboard';
 import CreateEvent from './pages/events/CreateEvent';
 import ManageEvents from './pages/events/ManageEvents';
 import EventsEarnings from './pages/events/EventsEarnings';
+import MyEvents from './pages/events/MyEvents';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, cafe, loading } = useAuth();

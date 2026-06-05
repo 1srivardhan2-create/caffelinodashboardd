@@ -39,11 +39,17 @@ router.get('/:eventId/export', eventController.exportEventRegistrations);
 // Get Event by ID
 router.get('/:id', eventController.getEventById);
 
+// Save Draft
+router.post('/save-draft', eventController.saveDraft);
+
 // Publish Event
-router.post('/publish', eventController.publishEvent);
+router.post('/publish/:id', eventController.publishEvent);
+
+// Unpublish Event
+router.post('/unpublish/:id', eventController.unpublishEvent);
 
 // Cancel Event
-router.post('/cancel', eventController.cancelEvent);
+router.post('/cancel/:id', eventController.cancelEvent);
 
 // Register Event
 router.post('/register', eventController.registerEvent);
