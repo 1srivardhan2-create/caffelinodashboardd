@@ -10,7 +10,7 @@ router.post('/upload-banner', upload.single('banner'), eventController.uploadBan
 router.post('/create', eventController.createEvent);
 
 // Update Event (with optional image upload)
-router.put('/update/:id', upload.single('banner'), eventController.updateEvent);
+router.post('/update/:id', upload.single('banner'), eventController.updateEvent);
 
 // Delete Event
 router.delete('/delete/:id', eventController.deleteEvent);

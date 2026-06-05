@@ -22,6 +22,7 @@ import CreateEvent from './pages/events/CreateEvent';
 import ManageEvents from './pages/events/ManageEvents';
 import EventsEarnings from './pages/events/EventsEarnings';
 import MyEvents from './pages/events/MyEvents';
+import EventErrorBoundary from './components/events/EventErrorBoundary';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, cafe, loading } = useAuth();
@@ -179,7 +180,8 @@ export const router = createBrowserRouter([
           <EventsDashboard />
         </EventsLayout>
       </EventsProtectedRoute>
-    )
+    ),
+    errorElement: <EventErrorBoundary />
   },
   {
     path: '/events/earnings',
@@ -189,7 +191,8 @@ export const router = createBrowserRouter([
           <EventsEarnings />
         </EventsLayout>
       </EventsProtectedRoute>
-    )
+    ),
+    errorElement: <EventErrorBoundary />
   },
   {
     path: '/events/create',
@@ -199,7 +202,30 @@ export const router = createBrowserRouter([
           <CreateEvent />
         </EventsLayout>
       </EventsProtectedRoute>
-    )
+    ),
+    errorElement: <EventErrorBoundary />
+  },
+  {
+    path: '/events/edit/:eventId',
+    element: (
+      <EventsProtectedRoute>
+        <EventsLayout>
+          <CreateEvent />
+        </EventsLayout>
+      </EventsProtectedRoute>
+    ),
+    errorElement: <EventErrorBoundary />
+  },
+  {
+    path: '/events/my-events',
+    element: (
+      <EventsProtectedRoute>
+        <EventsLayout>
+          <MyEvents />
+        </EventsLayout>
+      </EventsProtectedRoute>
+    ),
+    errorElement: <EventErrorBoundary />
   },
   {
     path: '/events/manage',
@@ -209,6 +235,7 @@ export const router = createBrowserRouter([
           <ManageEvents />
         </EventsLayout>
       </EventsProtectedRoute>
-    )
+    ),
+    errorElement: <EventErrorBoundary />
   }
 ]);
