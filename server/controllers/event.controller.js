@@ -59,7 +59,7 @@ exports.saveDraft = async (req, res) => {
     const { _id, ...eventData } = req.body;
     
     // Encrypt sensitive bank details if present
-    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId', 'panNumber', 'gstNumber'];
+    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId'];
     sensitiveFields.forEach(field => {
       if (eventData[field]) {
         eventData[field] = encrypt(eventData[field]);
@@ -90,8 +90,8 @@ exports.createEvent = async (req, res) => {
       cafeId, cafeName, venueName, address, googleMapsLink, city, state, country, pincode, latitude, longitude,
       eventDate, startTime, endTime, timezone,
       ticketType, ticketPrice, maxSeats, availableSeats,
-      organizerName, email, phone, instagramLink, websiteLink, organizerId,
-      accountHolderName, bankName, accountNumber, ifscCode, upiId, panNumber, gstNumber
+      organizerName, email, phone, eventInstagramId, organizerId,
+      accountHolderName, bankName, accountNumber, ifscCode, upiId
     } = req.body;
 
     // Encrypt sensitive bank details
@@ -101,8 +101,6 @@ exports.createEvent = async (req, res) => {
       accountNumber: encrypt(accountNumber),
       ifscCode: encrypt(ifscCode),
       upiId: encrypt(upiId),
-      panNumber: encrypt(panNumber),
-      gstNumber: encrypt(gstNumber),
     };
 
     const newEvent = new Event({
@@ -112,7 +110,7 @@ exports.createEvent = async (req, res) => {
       eventDate, startTime, endTime, timezone,
       ticketType, ticketPrice: ticketType === 'free' ? 0 : ticketPrice,
       maxSeats, availableSeats: maxSeats,
-      organizerName, email, phone, instagramLink, websiteLink, organizerId,
+      organizerName, email, phone, eventInstagramId, organizerId,
       ...encryptedBankDetails,
       status: 'active'
     });
@@ -136,7 +134,7 @@ exports.updateEvent = async (req, res) => {
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
 
     // Handle encryption if bank details are updated
-    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId', 'panNumber', 'gstNumber'];
+    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId'];
     sensitiveFields.forEach(field => {
       if (updateData[field]) {
         updateData[field] = encrypt(updateData[field]);
@@ -174,7 +172,7 @@ exports.deleteEvent = async (req, res) => {
 exports.getAllEvents = async (req, res) => {
   try {
     // Exclude bank details from general query
-    const events = await Event.find().select('-accountHolderName -bankName -accountNumber -ifscCode -upiId -panNumber -gstNumber');
+    const events = await Event.find().select('-accountHolderName -bankName -accountNumber -ifscCode -upiId');
     res.status(200).json({ success: true, events });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching events', error: error.message });
@@ -196,8 +194,6 @@ exports.getEventById = async (req, res) => {
     delete eventObj.accountNumber;
     delete eventObj.ifscCode;
     delete eventObj.upiId;
-    delete eventObj.panNumber;
-    delete eventObj.gstNumber;
 
     res.status(200).json({ success: true, event: eventObj });
   } catch (error) {

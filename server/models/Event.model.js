@@ -41,18 +41,15 @@ const EventSchema = new mongoose.Schema({
   organizerName: { type: String },
   email: { type: String },
   phone: { type: String },
-  instagramLink: { type: String },
-  websiteLink: { type: String },
+  eventInstagramId: { type: String },
   organizerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  // STEP 7 - Payment Settlement (Encrypted fields)
+  // STEP 7 - Bank Details
   accountHolderName: { type: String },
   bankName: { type: String },
   accountNumber: { type: String },
   ifscCode: { type: String },
   upiId: { type: String },
-  panNumber: { type: String },
-  gstNumber: { type: String },
 
   // EVENT STATUS
   status: { 

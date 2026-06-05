@@ -54,8 +54,7 @@ export default function CreateEvent() {
     orgName: '',
     email: '',
     phone: '',
-    instagram: '',
-    website: '',
+    eventInstagramId: '',
     // Payment Fields
     accHolderName: '',
     bankName: '',
@@ -63,8 +62,6 @@ export default function CreateEvent() {
     confirmAccNumber: '',
     ifscCode: '',
     upiId: '',
-    panNumber: '',
-    gstNumber: '',
   });
 
   useEffect(() => {
@@ -111,8 +108,13 @@ export default function CreateEvent() {
               orgName: ev.organizerName || user?.fullName || '',
               email: ev.email || user?.email || '',
               phone: ev.phone || '',
-              instagram: ev.instagramLink || '',
-              website: ev.websiteLink || '',
+              eventInstagramId: ev.eventInstagramId || '',
+              accHolderName: ev.accountHolderName || '',
+              bankName: ev.bankName || '',
+              accNumber: ev.accountNumber || '',
+              confirmAccNumber: ev.accountNumber || '',
+              ifscCode: ev.ifscCode || '',
+              upiId: ev.upiId || '',
             }));
             if (!eventId) {
               toast.success('Draft restored successfully');
@@ -194,8 +196,7 @@ export default function CreateEvent() {
         organizerName: formData.orgName,
         email: formData.email,
         phone: formData.phone,
-        instagramLink: formData.instagram,
-        websiteLink: formData.website,
+        eventInstagramId: formData.eventInstagramId,
         organizerId: user?.id,
       };
 
@@ -277,15 +278,12 @@ export default function CreateEvent() {
         organizerName: formData.orgName || 'Organizer',
         email: formData.email || 'email@example.com',
         phone: formData.phone || '0000000000',
-        instagramLink: formData.instagram,
-        websiteLink: formData.website,
+        eventInstagramId: formData.eventInstagramId,
         accountHolderName: formData.accHolderName,
         bankName: formData.bankName,
         accountNumber: formData.accNumber,
         ifscCode: formData.ifscCode,
         upiId: formData.upiId,
-        panNumber: formData.panNumber,
-        gstNumber: formData.gstNumber,
         organizerId: user?.id,
       };
 

@@ -63,7 +63,7 @@ export default function EventPreviewCard({ formData }: any) {
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Venue</p>
               <p className="text-sm font-medium text-[#3E2723]">
-                {formData.venue || 'Event Venue'}{formData.cafe ? ` at ${formData.cafe}` : ''}
+                {formData.cafe || 'Event Venue'}
               </p>
               <p className="text-xs text-gray-500 truncate max-w-[200px]">
                 {formData.address || 'Address'}

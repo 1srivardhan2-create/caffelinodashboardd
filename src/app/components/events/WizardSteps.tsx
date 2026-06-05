@@ -153,21 +153,18 @@ export const Step3Location = ({ formData, setFormData }: any) => {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="cafe" className="text-[#3E2723] font-semibold">Select Cafe</Label>
-        <select 
-          id="cafe"
-          value={formData.cafe}
+        <Label htmlFor="cafe" className="text-[#3E2723] font-semibold">Cafe Name *</Label>
+        <Input 
+          id="cafe" 
+          value={formData.cafe} 
           onChange={(e) => setFormData({ ...formData, cafe: e.target.value })}
-          className="w-full border border-[#E8DCC4] rounded-md h-12 px-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]/50"
-        >
-          <option value="">Choose a cafe...</option>
-          <option value="Caffelino Downtown">Caffelino Downtown</option>
-          <option value="Caffelino Westside">Caffelino Westside</option>
-        </select>
+          placeholder="e.g. Caffelino Jubilee Hills" 
+          className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
+        />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="venue" className="text-[#3E2723] font-semibold">Event Venue / Room</Label>
+        <Label htmlFor="venue" className="text-[#3E2723] font-semibold">Venue / Room *</Label>
         <Input 
           id="venue" 
           value={formData.venue} 
@@ -178,7 +175,7 @@ export const Step3Location = ({ formData, setFormData }: any) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address" className="text-[#3E2723] font-semibold">Address</Label>
+        <Label htmlFor="address" className="text-[#3E2723] font-semibold">Address *</Label>
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
           <Input 
@@ -193,7 +190,7 @@ export const Step3Location = ({ formData, setFormData }: any) => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="city" className="text-[#3E2723] font-semibold">City</Label>
+          <Label htmlFor="city" className="text-[#3E2723] font-semibold">City *</Label>
           <Input 
             id="city" 
             value={formData.city} 
@@ -203,7 +200,7 @@ export const Step3Location = ({ formData, setFormData }: any) => {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="state" className="text-[#3E2723] font-semibold">State</Label>
+          <Label htmlFor="state" className="text-[#3E2723] font-semibold">State *</Label>
           <Input 
             id="state" 
             value={formData.state} 
@@ -216,7 +213,7 @@ export const Step3Location = ({ formData, setFormData }: any) => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="country" className="text-[#3E2723] font-semibold">Country</Label>
+          <Label htmlFor="country" className="text-[#3E2723] font-semibold">Country *</Label>
           <Input 
             id="country" 
             value={formData.country} 
@@ -226,7 +223,7 @@ export const Step3Location = ({ formData, setFormData }: any) => {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="pincode" className="text-[#3E2723] font-semibold">Pincode</Label>
+          <Label htmlFor="pincode" className="text-[#3E2723] font-semibold">Pincode *</Label>
           <Input 
             id="pincode" 
             value={formData.pincode} 
@@ -238,7 +235,7 @@ export const Step3Location = ({ formData, setFormData }: any) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="maps" className="text-[#3E2723] font-semibold">Google Maps Link</Label>
+        <Label htmlFor="maps" className="text-[#3E2723] font-semibold">Google Maps Link *</Label>
         <div className="relative">
           <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
           <Input 
@@ -384,7 +381,7 @@ export const Step6Organizer = ({ formData, setFormData }: any) => {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="orgName" className="text-[#3E2723] font-semibold">Organizer Name</Label>
+        <Label htmlFor="orgName" className="text-[#3E2723] font-semibold">Organizer Name *</Label>
         <Input 
           id="orgName" 
           value={formData.orgName} 
@@ -396,7 +393,7 @@ export const Step6Organizer = ({ formData, setFormData }: any) => {
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-[#3E2723] font-semibold">Email</Label>
+          <Label htmlFor="email" className="text-[#3E2723] font-semibold">Email *</Label>
           <Input 
             id="email" 
             type="email"
@@ -407,7 +404,7 @@ export const Step6Organizer = ({ formData, setFormData }: any) => {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone" className="text-[#3E2723] font-semibold">Phone Number</Label>
+          <Label htmlFor="phone" className="text-[#3E2723] font-semibold">Phone Number *</Label>
           <Input 
             id="phone" 
             type="text"
@@ -425,28 +422,14 @@ export const Step6Organizer = ({ formData, setFormData }: any) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="instagram" className="text-[#3E2723] font-semibold">Instagram Link</Label>
+        <Label htmlFor="instagram" className="text-[#3E2723] font-semibold">Event Instagram ID (Optional)</Label>
         <div className="relative">
           <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
           <Input 
             id="instagram" 
-            value={formData.instagram} 
-            onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-            placeholder="https://instagram.com/..." 
-            className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12 pl-10"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="website" className="text-[#3E2723] font-semibold">Website (Optional)</Label>
-        <div className="relative">
-          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-          <Input 
-            id="website" 
-            value={formData.website} 
-            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-            placeholder="https://..." 
+            value={formData.eventInstagramId || ''} 
+            onChange={(e) => setFormData({ ...formData, eventInstagramId: e.target.value })}
+            placeholder="e.g. caffelinoevents or @caffelinoevents" 
             className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12 pl-10"
           />
         </div>
@@ -477,7 +460,7 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="accHolderName" className="text-[#3E2723] font-semibold">Account Holder Name</Label>
+            <Label htmlFor="accHolderName" className="text-[#3E2723] font-semibold">Account Holder Name *</Label>
             <Input 
               id="accHolderName" 
               value={formData.accHolderName} 
@@ -487,7 +470,7 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bankName" className="text-[#3E2723] font-semibold">Bank Name</Label>
+            <Label htmlFor="bankName" className="text-[#3E2723] font-semibold">Bank Name *</Label>
             <Input 
               id="bankName" 
               value={formData.bankName} 
@@ -500,7 +483,7 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="accNumber" className="text-[#3E2723] font-semibold">Account Number</Label>
+            <Label htmlFor="accNumber" className="text-[#3E2723] font-semibold">Account Number *</Label>
             <Input 
               id="accNumber"
               type="password"
@@ -512,7 +495,7 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
             {errors.accNumber && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.accNumber}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmAccNumber" className="text-[#3E2723] font-semibold">Confirm Account Number</Label>
+            <Label htmlFor="confirmAccNumber" className="text-[#3E2723] font-semibold">Confirm Account Number *</Label>
             <Input 
               id="confirmAccNumber"
               type="text"
@@ -527,7 +510,7 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="ifscCode" className="text-[#3E2723] font-semibold">IFSC Code</Label>
+            <Label htmlFor="ifscCode" className="text-[#3E2723] font-semibold">IFSC Code *</Label>
             <Input 
               id="ifscCode" 
               value={formData.ifscCode} 
@@ -538,7 +521,7 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
             {errors.ifscCode && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.ifscCode}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="upiId" className="text-[#3E2723] font-semibold">UPI ID</Label>
+            <Label htmlFor="upiId" className="text-[#3E2723] font-semibold">UPI ID *</Label>
             <Input 
               id="upiId" 
               value={formData.upiId} 
@@ -551,33 +534,6 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
         </div>
       </div>
 
-      <div className="space-y-4 pt-4">
-        <h3 className="text-lg font-bold text-[#3E2723] flex items-center gap-2 border-b border-[#E8DCC4] pb-2">
-          Tax Details (Optional)
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="panNumber" className="text-[#3E2723] font-semibold">PAN Number</Label>
-            <Input 
-              id="panNumber" 
-              value={formData.panNumber} 
-              onChange={(e) => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })}
-              placeholder="ABCDE1234F" 
-              className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="gstNumber" className="text-[#3E2723] font-semibold">GST Number</Label>
-            <Input 
-              id="gstNumber" 
-              value={formData.gstNumber} 
-              onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
-              placeholder="22AAAAA0000A1Z5" 
-              className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11"
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
