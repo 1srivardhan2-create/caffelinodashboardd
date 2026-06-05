@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { UploadCloud, MapPin, Calendar as CalendarIcon, Clock, Link as LinkIcon, Instagram, Lock, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import { api } from '../../../services/api';
 
 export const Step1BasicInfo = ({ formData, setFormData }: any) => {
   const categories = [
@@ -85,12 +86,8 @@ export const Step2Banner = ({ formData, setFormData }: any) => {
 
     setIsUploading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/events/upload-banner', {
-        method: 'POST',
-        body: uploadData,
-      });
+      const data = await api.postForm('/api/events/upload-banner', uploadData);
 
-      const data = await response.json();
       if (data.success) {
         setFormData({ ...formData, bannerUrl: data.bannerUrl, bannerPublicId: data.publicId });
         toast.success('Banner uploaded successfully');

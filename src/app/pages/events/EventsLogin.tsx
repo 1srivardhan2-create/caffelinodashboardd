@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { api } from '../../../services/api';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useEventAuth } from '../../context/EventAuthContext';
 import { Button } from '../../components/ui/button';
@@ -16,15 +17,7 @@ export default function EventsLogin() {
     onSuccess: async (tokenResponse) => {
       setLoginLoading(true);
       try {
-        const response = await fetch('http://localhost:5000/api/auth/google', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token: tokenResponse.access_token })
-        });
-        
-        const data = await response.json();
+        const data = await api.post('/api/auth/google', { token: tokenResponse.access_token });
         
         if (data.success) {
           login(data.user, data.token);

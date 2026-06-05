@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { api } from '../../../services/api';
 import { useEventAuth } from '../../context/EventAuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../../components/ui/button';
@@ -158,13 +159,8 @@ export default function CreateEvent() {
         organizerId: user?.id,
       };
 
-      const response = await fetch('http://localhost:5000/api/events/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const data = await api.post('/api/events/create', payload);
 
-      const data = await response.json();
       if (data.success) {
         setIsPublished(true);
         toast.success('Event published successfully!');
