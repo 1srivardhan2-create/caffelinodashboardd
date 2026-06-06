@@ -314,15 +314,52 @@ export default function Attendance() {
                   {verificationData.profilePhoto ? (
                     <img src={verificationData.profilePhoto} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-[#8B5E3C]" />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-[#F5E6D3] flex items-center justify-center text-[#8B5E3C] font-bold text-xl border-2 border-[#8B5E3C]">
-                      {verificationData.attendeeName.charAt(0)}
+                    <div className="w-16 h-16 rounded-full bg-[#F5E6D3] flex items-center justify-center text-[#8B5E3C] font-bold text-xl border-2 border-[#8B5E3C] shrink-0">
+                      {verificationData.attendeeName.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div>
-                    <h3 className="font-extrabold text-2xl text-[#3E2723]">{verificationData.attendeeName}</h3>
-                    <p className="text-sm text-gray-600 mt-1">Mobile: <span className="font-medium text-[#3E2723]">{verificationData.phone}</span></p>
-                    <p className="text-sm text-gray-600">Email: <span className="font-medium text-[#3E2723]">{verificationData.email}</span></p>
+                  <div className="min-w-0">
+                    <h3 className="font-extrabold text-2xl text-[#3E2723] truncate">{verificationData.attendeeName}</h3>
+                    {verificationData.phone && <p className="text-sm text-gray-600 mt-1">Mobile: <span className="font-medium text-[#3E2723]">{verificationData.phone}</span></p>}
+                    {verificationData.email && <p className="text-sm text-gray-600">Email: <span className="font-medium text-[#3E2723]">{verificationData.email}</span></p>}
                     {verificationData.instagramId && <p className="text-sm text-gray-600">Instagram: <span className="font-medium text-[#8B5E3C]">@{verificationData.instagramId}</span></p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* TICKET INFORMATION */}
+              <div>
+                <h4 className="text-xs font-bold text-[#A89F91] uppercase tracking-wider mb-3 border-b border-gray-100 pb-1">Ticket Information</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-4 text-sm bg-[#FDFBF7] p-4 rounded-xl border border-[#E8DCC4]">
+                  <div>
+                    <span className="block text-xs text-gray-500">Ticket Number</span>
+                    <span className="font-mono font-bold text-[#8B5E3C]">{verificationData.ticketNumber}</span>
+                  </div>
+                  <div className="min-w-0 overflow-hidden">
+                    <span className="block text-xs text-gray-500">Registration ID</span>
+                    <span className="font-mono text-xs text-gray-600 block truncate" title={verificationData.registrationId}>{verificationData.registrationId}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Registration Time</span>
+                    <span className="font-medium text-[#3E2723]">{new Date(verificationData.registrationDate).toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Payment Status</span>
+                    {verificationData.paymentStatus === 'completed' ? (
+                      <span className="font-bold text-green-600">PAID</span>
+                    ) : verificationData.paymentStatus === 'pending' ? (
+                      <span className="font-bold text-orange-600">PENDING</span>
+                    ) : (
+                      <span className="font-bold text-gray-600 uppercase">{verificationData.paymentStatus || 'FREE'}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Ticket Price</span>
+                    <span className="font-medium text-[#3E2723]">₹{verificationData.ticketPrice}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Seat Number</span>
+                    <span className="font-medium text-[#3E2723]">{verificationData.seatNumber}</span>
                   </div>
                 </div>
               </div>
@@ -359,43 +396,6 @@ export default function Attendance() {
                       <span className="font-medium text-[#3E2723]">{verificationData.venueName}{verificationData.city ? `, ${verificationData.city}` : ''}</span>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* TICKET INFORMATION */}
-              <div>
-                <h4 className="text-xs font-bold text-[#A89F91] uppercase tracking-wider mb-3 border-b border-gray-100 pb-1">Ticket Information</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2 text-sm bg-[#FDFBF7] p-4 rounded-xl border border-[#E8DCC4]">
-                  <div>
-                    <span className="block text-xs text-gray-500">Ticket Number</span>
-                    <span className="font-mono font-bold text-[#8B5E3C]">{verificationData.ticketNumber}</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Registration ID</span>
-                    <span className="font-mono text-xs text-gray-600 truncate">{verificationData.registrationId}</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Registration Time</span>
-                    <span className="font-medium text-[#3E2723]">{new Date(verificationData.registrationDate).toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Payment Status</span>
-                    {verificationData.paymentStatus === 'completed' ? (
-                      <span className="font-bold text-green-600">PAID</span>
-                    ) : verificationData.paymentStatus === 'pending' ? (
-                      <span className="font-bold text-orange-600">PENDING</span>
-                    ) : (
-                      <span className="font-bold text-gray-600 uppercase">{verificationData.paymentStatus || 'FREE'}</span>
-                    )}
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Ticket Price</span>
-                    <span className="font-medium text-[#3E2723]">₹{verificationData.ticketPrice}</span>
-                  </div>
-                  <div>
-                    <span className="block text-xs text-gray-500">Seat Number</span>
-                    <span className="font-medium text-[#3E2723]">{verificationData.seatNumber}</span>
-                  </div>
                 </div>
               </div>
 
