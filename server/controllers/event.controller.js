@@ -290,9 +290,11 @@ exports.registerEvent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Not enough seats available' });
     }
 
+    const ticketNumber = `TKT-${Math.random().toString(16).substring(2, 8).toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`;
+
     // Create Registration
     const registration = new Registration({
-      eventId, userId, userName, email, phone, ticketCount, amountPaid, paymentStatus: 'completed'
+      eventId, userId, userName, email, phone, ticketCount, amountPaid, paymentStatus: 'completed', ticketNumber
     });
     await registration.save();
 

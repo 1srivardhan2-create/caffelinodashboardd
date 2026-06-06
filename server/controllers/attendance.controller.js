@@ -19,20 +19,19 @@ exports.verifyTicket = async (req, res) => {
     // Sanitize string (remove accidental quotes or whitespace)
     ticketNumber = String(ticketNumber).replace(/['"]/g, '').trim();
 
-    // Find the Ticket
-    let ticket = await Ticket.findOne({ ticketNumber }).populate('eventId').populate('registrationId');
+    // Find the Registration
+    let registration = await Registration.findOne({ ticketNumber }).populate('eventId');
     
-    // Fallback: If it's a valid MongoDB ObjectId, maybe the old QR code used _id
-    if (!ticket && mongoose.Types.ObjectId.isValid(ticketNumber)) {
-      ticket = await Ticket.findById(ticketNumber).populate('eventId').populate('registrationId');
+    // Fallback: If it's a valid MongoDB ObjectId
+    if (!registration && mongoose.Types.ObjectId.isValid(ticketNumber)) {
+      registration = await Registration.findById(ticketNumber).populate('eventId');
     }
 
-    if (!ticket) {
+    if (!registration) {
       return res.status(404).json({ success: false, message: `Invalid Ticket: Not found (${ticketNumber})` });
     }
 
-    const event = ticket.eventId;
-    const registration = ticket.registrationId;
+    const event = registration.eventId;
 
     // Verify the organizer owns this event
     if (event.organizerId.toString() !== organizerId) {
@@ -40,15 +39,14 @@ exports.verifyTicket = async (req, res) => {
     }
 
     // Check if attendance already recorded
-    const existingAttendance = await Attendance.findOne({ ticketNumber });
-    if (existingAttendance) {
+    if (registration.checkedIn) {
       return res.status(400).json({ 
         success: false, 
         message: '❌ Already Checked In',
         data: {
-          attendeeName: existingAttendance.attendeeName,
-          eventName: existingAttendance.eventName,
-          checkedInAt: existingAttendance.checkedInAt
+          attendeeName: registration.userName,
+          eventName: event.eventName,
+          checkedInAt: registration.checkedInAt
         }
       });
     }
@@ -60,7 +58,7 @@ exports.verifyTicket = async (req, res) => {
         attendeeName: registration.userName,
         email: registration.email,
         phone: registration.phone,
-        ticketNumber: ticketNumber,
+        ticketNumber: registration.ticketNumber || ticketNumber,
         eventName: event.eventName,
         registrationDate: registration.registrationDate
       }
@@ -84,62 +82,47 @@ exports.scanTicket = async (req, res) => {
     // Sanitize
     ticketNumber = String(ticketNumber).replace(/['"]/g, '').trim();
 
-    // Check if attendance already recorded
-    const existingAttendance = await Attendance.findOne({ ticketNumber });
-    if (existingAttendance) {
-      return res.status(400).json({ 
-        success: false, 
-        message: '❌ Already Checked In',
-        data: {
-          attendeeName: existingAttendance.attendeeName,
-          eventName: existingAttendance.eventName,
-          checkedInAt: existingAttendance.checkedInAt
-        }
-      });
+    // Find the Registration
+    let registration = await Registration.findOne({ ticketNumber }).populate('eventId');
+    if (!registration && mongoose.Types.ObjectId.isValid(ticketNumber)) {
+      registration = await Registration.findById(ticketNumber).populate('eventId');
     }
 
-    // Find the Ticket
-    let ticket = await Ticket.findOne({ ticketNumber }).populate('eventId').populate('registrationId');
-    if (!ticket && mongoose.Types.ObjectId.isValid(ticketNumber)) {
-      ticket = await Ticket.findById(ticketNumber).populate('eventId').populate('registrationId');
-    }
-
-    if (!ticket) {
+    if (!registration) {
       return res.status(404).json({ success: false, message: `Invalid Ticket: Not found (${ticketNumber})` });
     }
 
-    const event = ticket.eventId;
-    const registration = ticket.registrationId;
+    const event = registration.eventId;
 
     // Verify the organizer owns this event
     if (event.organizerId.toString() !== organizerId) {
       return res.status(403).json({ success: false, message: 'Unauthorized to scan for this event' });
     }
 
-    // Mark ticket as used (optional based on your Ticket schema, but good practice)
-    ticket.status = 'used';
-    await ticket.save();
+    // Check if attendance already recorded
+    if (registration.checkedIn) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '❌ Already Checked In',
+        data: {
+          attendeeName: registration.userName,
+          eventName: event.eventName,
+          checkedInAt: registration.checkedInAt
+        }
+      });
+    }
 
-    // Create Attendance Record
-    const attendance = new Attendance({
-      ticketNumber,
-      eventId: event._id,
-      registrationId: registration._id,
-      attendeeName: registration.userName,
-      email: registration.email,
-      phone: registration.phone,
-      eventName: event.eventName,
-      checkedIn: true,
-      checkedInAt: new Date(),
-      checkedInBy: organizerId
-    });
-
-    await attendance.save();
+    // Update Registration to Checked-In
+    registration.checkedIn = true;
+    registration.checkedInAt = new Date();
+    registration.checkedInBy = organizerId;
+    
+    await registration.save();
 
     res.status(200).json({ 
       success: true, 
       message: 'Check-in successful', 
-      attendance 
+      attendance: registration 
     });
 
   } catch (error) {
@@ -160,9 +143,26 @@ exports.getAttendanceList = async (req, res) => {
     const events = await Event.find(query).select('_id eventName');
     const eventIds = events.map(e => e._id);
 
-    const attendanceRecords = await Attendance.find({ eventId: { $in: eventIds } }).sort({ checkedInAt: -1 });
+    // Fetch all checked-in registrations
+    const attendanceRecords = await Registration.find({ 
+      eventId: { $in: eventIds }, 
+      checkedIn: true 
+    })
+    .populate('eventId', 'eventName')
+    .sort({ checkedInAt: -1 });
 
-    res.status(200).json({ success: true, attendance: attendanceRecords });
+    // Map to expected format for the frontend
+    const mappedList = attendanceRecords.map(a => ({
+      _id: a._id,
+      attendeeName: a.userName,
+      email: a.email,
+      phone: a.phone,
+      ticketNumber: a.ticketNumber || a._id.toString(),
+      eventName: a.eventId?.eventName || 'Unknown Event',
+      checkedInAt: a.checkedInAt
+    }));
+
+    res.status(200).json({ success: true, attendance: mappedList });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching attendance', error: error.message });
   }
@@ -176,12 +176,12 @@ exports.getAttendanceStats = async (req, res) => {
     const events = await Event.find({ organizerId }).select('_id');
     const eventIds = events.map(e => e._id);
 
-    // Total Registrations (payment completed)
-    const registrations = await Registration.find({ eventId: { $in: eventIds }, paymentStatus: 'completed' });
+    // Total Registrations
+    const registrations = await Registration.find({ eventId: { $in: eventIds } });
     const totalRegistrations = registrations.reduce((acc, curr) => acc + curr.ticketCount, 0);
 
     // Total Checked In
-    const checkedInCount = await Attendance.countDocuments({ eventId: { $in: eventIds }, checkedIn: true });
+    const checkedInCount = await Registration.countDocuments({ eventId: { $in: eventIds }, checkedIn: true });
 
     // Today's Check-Ins
     const startOfDay = new Date();
@@ -189,7 +189,7 @@ exports.getAttendanceStats = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
     
-    const todaysCheckIns = await Attendance.countDocuments({
+    const todaysCheckIns = await Registration.countDocuments({
       eventId: { $in: eventIds },
       checkedIn: true,
       checkedInAt: { $gte: startOfDay, $lte: endOfDay }
