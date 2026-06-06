@@ -384,17 +384,21 @@ exports.getDashboardStats = async (req, res) => {
     const query = organizerId ? { organizerId } : {};
 
     const events = await Event.find(query);
-    const registrations = await Registration.find(organizerId ? { /* maybe filter by events */ } : {}); // Simplified for now
+    const eventIds = events.map(e => e._id);
+    const registrations = await Registration.find({ eventId: { $in: eventIds }, paymentStatus: 'completed' }); 
+
+    console.log(`[Dashboard Stats] Organizer: ${organizerId || 'ALL'}, DB Events Count: ${events.length}`);
 
     const stats = {
       totalEvents: events.length,
-      activeEvents: events.filter(e => e.status === 'published').length,
+      publishedEvents: events.filter(e => e.status === 'published').length,
+      draftEvents: events.filter(e => e.status === 'draft').length,
       upcomingEvents: events.filter(e => new Date(e.eventDate) > new Date()).length,
       completedEvents: events.filter(e => e.status === 'completed').length,
       cancelledEvents: events.filter(e => e.status === 'cancelled').length,
-      totalTicketsSold: events.reduce((acc, curr) => acc + curr.ticketsSold, 0),
-      totalRegistrations: events.reduce((acc, curr) => acc + curr.registrationsCount, 0),
-      totalRevenue: events.reduce((acc, curr) => acc + (curr.ticketsSold * curr.ticketPrice), 0)
+      totalTicketsSold: registrations.reduce((acc, curr) => acc + curr.ticketCount, 0),
+      totalRegistrations: registrations.length,
+      totalRevenue: registrations.reduce((acc, curr) => acc + curr.amountPaid, 0)
     };
 
     res.status(200).json({ success: true, stats });
@@ -436,6 +440,7 @@ exports.getMyEvents = async (req, res) => {
     if (!organizerId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const events = await Event.find({ organizerId }).sort({ createdAt: -1 });
+    console.log(`[My Events] Organizer: ${organizerId}, Returned ${events.length} unique events from DB`);
     res.status(200).json({ success: true, events });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching my events', error: error.message });
