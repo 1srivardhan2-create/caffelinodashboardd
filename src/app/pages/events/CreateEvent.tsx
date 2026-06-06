@@ -245,7 +245,7 @@ export default function CreateEvent() {
   const handlePublish = async () => {
     if (!validatePhone()) return;
 
-    if (currentStep === 7) {
+    if (currentStep === 7 && formData.isPaid) {
       if (!validatePayment()) {
         toast.error('Please fix payment details errors.');
         return;

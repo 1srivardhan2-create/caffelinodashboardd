@@ -439,6 +439,22 @@ export const Step6Organizer = ({ formData, setFormData }: any) => {
 };
 
 export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) => {
+  if (!formData.isPaid) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-[#FFF8F0] border border-[#E8DCC4] p-8 rounded-xl text-center space-y-4">
+          <div className="w-16 h-16 bg-[#F4E3C5] rounded-full flex items-center justify-center mx-auto mb-2">
+            <Lock className="size-8 text-[#8B5E3C]" />
+          </div>
+          <h2 className="text-xl font-bold text-[#3E2723]">Free Event</h2>
+          <p className="text-[#8B5E3C] max-w-md mx-auto">
+            Since this is a free event, no bank details are required for payment settlement. You can simply review and publish your event!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-[#FDFBF7] border border-[#E8DCC4] p-4 rounded-xl flex gap-3 mb-6">
