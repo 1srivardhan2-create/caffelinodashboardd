@@ -3,6 +3,7 @@ const Registration = require('../models/Registration.model');
 const Ticket = require('../models/Ticket.model');
 const Payment = require('../models/Payment.model');
 const Settlement = require('../models/Settlement.model');
+const Attendance = require('../models/Attendance.model');
 const { encrypt, decrypt } = require('../utils/cryptoHelper');
 const uploadBuffer = require('../utils/uploadToCloudinary');
 const cloudinary = require('../config/cloudinary');
@@ -440,8 +441,31 @@ exports.getMyEvents = async (req, res) => {
     if (!organizerId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const events = await Event.find({ organizerId }).sort({ createdAt: -1 });
+    const eventIds = events.map(e => e._id);
+    
+    // Get stats for all events
+    const registrations = await Registration.find({ eventId: { $in: eventIds }, paymentStatus: 'completed' });
+    const attendance = await Attendance.find({ eventId: { $in: eventIds }, checkedIn: true });
+
+    const eventsWithStats = events.map(event => {
+      const evRegs = registrations.filter(r => r.eventId.toString() === event._id.toString());
+      const evAtt = attendance.filter(a => a.eventId.toString() === event._id.toString());
+      
+      const totalRegistered = evRegs.reduce((acc, curr) => acc + curr.ticketCount, 0);
+      const checkedInCount = evAtt.length;
+      
+      return {
+        ...event.toObject(),
+        stats: {
+          totalRegistered,
+          checkedInCount,
+          pendingCount: totalRegistered - checkedInCount
+        }
+      };
+    });
+
     console.log(`[My Events] Organizer: ${organizerId}, Returned ${events.length} unique events from DB`);
-    res.status(200).json({ success: true, events });
+    res.status(200).json({ success: true, events: eventsWithStats });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching my events', error: error.message });
   }

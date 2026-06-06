@@ -13,6 +13,7 @@ const orderRoutes = require("./routes/order.routes");
 const eventRoutes = require("./routes/event.routes");
 const authRoutes = require("./routes/auth.routes");
 const mobileEventRoutes = require("./routes/mobile.event.routes");
+const attendanceRoutes = require("./routes/attendance.routes");
 
 app.use(cors({
   origin: [
@@ -33,6 +34,7 @@ app.use("/api", orderRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/mobile/events", mobileEventRoutes);
+app.use("/api/attendance", attendanceRoutes);
 app.use("/uploads", express.static("uploads"));
 
 mongoose

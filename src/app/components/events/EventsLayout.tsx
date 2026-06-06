@@ -12,7 +12,8 @@ import {
   X,
   MenuIcon as MenuBurger,
   IndianRupee,
-  ListOrdered
+  ListOrdered,
+  ScanLine
 } from 'lucide-react';
 
 interface EventsLayoutProps {
@@ -34,6 +35,7 @@ export default function EventsLayout({ children }: EventsLayoutProps) {
     { to: '/events/dashboard', icon: LayoutDashboard, label: 'Overview' },
     { to: '/events/earnings', icon: IndianRupee, label: 'Earnings' },
     { to: '/events/tickets', icon: Ticket, label: 'Tickets Sold' },
+    { to: '/events/attendance', icon: ScanLine, label: 'Attendance' },
     { to: '/events/create', icon: PlusCircle, label: 'Create Event' },
     { to: '/events/my-events', icon: ListOrdered, label: 'My Events' },
     { to: '/events/manage', icon: CalendarDays, label: 'Manage Events' },

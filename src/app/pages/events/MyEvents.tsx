@@ -142,10 +142,28 @@ export default function MyEvents() {
                     <MapPin className="size-4 mr-2 text-[#C19A6B]" />
                     <span className="line-clamp-1">{event.venueName || 'Venue TBD'}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Ticket className="size-4 mr-2 text-[#C19A6B]" />
-                    {event.ticketsSold} / {event.maxSeats || '∞'} sold
-                  </div>
+                  
+                  {event.stats ? (
+                    <div className="mt-4 bg-[#FDFBF7] border border-[#E8DCC4] p-3 rounded-lg grid grid-cols-3 gap-2 text-center shadow-inner">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">Registered</span>
+                        <span className="font-extrabold text-[#3E2723]">{event.stats.totalRegistered}</span>
+                      </div>
+                      <div className="flex flex-col border-l border-[#E8DCC4]">
+                        <span className="text-[10px] font-bold text-[#10B981] uppercase tracking-wider">Checked-In</span>
+                        <span className="font-extrabold text-[#10B981]">{event.stats.checkedInCount}</span>
+                      </div>
+                      <div className="flex flex-col border-l border-[#E8DCC4]">
+                        <span className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-wider">Pending</span>
+                        <span className="font-extrabold text-[#F59E0B]">{event.stats.pendingCount}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Ticket className="size-4 mr-2 text-[#C19A6B]" />
+                      {event.ticketsSold} / {event.maxSeats || '∞'} sold
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-auto pt-4 border-t border-[#E8DCC4] flex items-center justify-between gap-2">
