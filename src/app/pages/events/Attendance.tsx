@@ -21,7 +21,14 @@ export default function Attendance() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [verificationData, setVerificationData] = useState<any>(null);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [isConfirmingCheckIn, setIsConfirmingCheckIn] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+
+  // Success and Error Modals
+  const [successData, setSuccessData] = useState<any>(null);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [errorData, setErrorData] = useState<any>(null);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -89,18 +96,26 @@ export default function Attendance() {
 
       if (res.success) {
         setVerificationData(res.data);
+        setIsConfirmingCheckIn(false);
         setIsVerifyModalOpen(true);
       } else {
-        // If the ticket was already checked in, show error with timestamp
+        // If the ticket was already checked in, show error modal
         if (res.message === '❌ Already Checked In' && res.data) {
-          toast.error(`❌ Already Checked In: ${res.data.attendeeName} at ${new Date(res.data.checkedInAt).toLocaleString()}`);
+          setErrorData(res.data);
+          setIsErrorModalOpen(true);
         } else {
           toast.error(res.message || 'Invalid Ticket');
         }
       }
     } catch (err: any) {
       setIsScannerOpen(false);
-      toast.error(err?.response?.data?.message || 'Error verifying ticket.');
+      
+      if (err?.response?.data?.message === '❌ Already Checked In' && err?.response?.data?.data) {
+        setErrorData(err.response.data.data);
+        setIsErrorModalOpen(true);
+      } else {
+        toast.error(err?.response?.data?.message || 'Error verifying ticket.');
+      }
     }
   };
 
@@ -113,8 +128,15 @@ export default function Attendance() {
       });
 
       if (res.success) {
-        toast.success(`${verificationData.attendeeName} Checked In Successfully!`);
         setIsVerifyModalOpen(false);
+        // Show success modal
+        setSuccessData({
+          attendeeName: verificationData.attendeeName,
+          ticketNumber: verificationData.ticketNumber,
+          eventName: verificationData.eventName,
+          checkedInAt: res.attendance?.checkedInAt || new Date().toISOString()
+        });
+        setIsSuccessModalOpen(true);
         setVerificationData(null);
         fetchData(); // Instantly update dashboard
       } else {
@@ -221,8 +243,9 @@ export default function Attendance() {
                 <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Ticket #</th>
                 <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Attendee</th>
                 <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Event</th>
-                <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Contact</th>
+                <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Payment</th>
                 <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Time</th>
+                <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Scanned By</th>
                 <th className="p-4 text-xs font-bold text-[#A89F91] uppercase tracking-wider">Status</th>
               </tr>
             </thead>
@@ -230,15 +253,24 @@ export default function Attendance() {
               {filteredList.map((record, i) => (
                 <tr key={record._id || i} className="hover:bg-gray-50 transition-colors">
                   <td className="p-4 font-mono text-sm text-[#3E2723]">{record.ticketNumber}</td>
-                  <td className="p-4 font-medium text-[#3E2723]">{record.attendeeName}</td>
+                  <td className="p-4 font-medium text-[#3E2723]">
+                    {record.attendeeName}
+                    <div className="text-xs text-gray-500 font-normal">{record.phone}</div>
+                  </td>
                   <td className="p-4 text-sm text-[#8B5E3C] truncate max-w-[150px]">{record.eventName}</td>
-                  <td className="p-4 text-sm text-gray-600">
-                    <p>{record.email}</p>
-                    <p className="text-xs">{record.phone}</p>
+                  <td className="p-4 text-sm">
+                    {record.paymentStatus === 'completed' ? (
+                      <span className="text-green-600 font-medium">PAID</span>
+                    ) : record.paymentStatus === 'pending' ? (
+                      <span className="text-orange-600 font-medium">PENDING</span>
+                    ) : (
+                      <span className="text-gray-600 font-medium uppercase">{record.paymentStatus || 'FREE'}</span>
+                    )}
                   </td>
                   <td className="p-4 text-sm text-gray-600">
                     {new Date(record.checkedInAt).toLocaleString()}
                   </td>
+                  <td className="p-4 text-sm text-gray-600">{record.checkedInBy}</td>
                   <td className="p-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       <CheckCircle className="mr-1 size-3" /> Checked In
@@ -248,7 +280,7 @@ export default function Attendance() {
               ))}
               {filteredList.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                  <td colSpan={7} className="p-8 text-center text-gray-500">
                     No attendance records found.
                   </td>
                 </tr>
@@ -267,58 +299,232 @@ export default function Attendance() {
 
       {/* Verification Modal */}
       <Dialog open={isVerifyModalOpen} onOpenChange={setIsVerifyModalOpen}>
-        <DialogContent className="sm:max-w-md bg-white border-[#E8DCC4] rounded-2xl">
+        <DialogContent className="max-w-2xl bg-white border-[#E8DCC4] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogTitle className="text-xl font-bold text-[#3E2723] border-b border-[#E8DCC4] pb-4">
             Verify Attendee
           </DialogTitle>
           
           {verificationData && (
-            <div className="space-y-4 py-4">
-              <div className="bg-[#FDFBF7] p-4 rounded-xl border border-[#E8DCC4]">
-                <h3 className="font-extrabold text-2xl text-[#3E2723] mb-1">{verificationData.attendeeName}</h3>
-                <p className="text-sm font-bold text-[#8B5E3C] uppercase tracking-wider">{verificationData.eventName}</p>
+            <div className="space-y-6 py-2">
+              
+              {/* ATTENDEE INFORMATION */}
+              <div>
+                <h4 className="text-xs font-bold text-[#A89F91] uppercase tracking-wider mb-3 border-b border-gray-100 pb-1">Attendee Information</h4>
+                <div className="flex items-start gap-4">
+                  {verificationData.profilePhoto ? (
+                    <img src={verificationData.profilePhoto} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-[#8B5E3C]" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-[#F5E6D3] flex items-center justify-center text-[#8B5E3C] font-bold text-xl border-2 border-[#8B5E3C]">
+                      {verificationData.attendeeName.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-extrabold text-2xl text-[#3E2723]">{verificationData.attendeeName}</h3>
+                    <p className="text-sm text-gray-600 mt-1">Mobile: <span className="font-medium text-[#3E2723]">{verificationData.phone}</span></p>
+                    <p className="text-sm text-gray-600">Email: <span className="font-medium text-[#3E2723]">{verificationData.email}</span></p>
+                    {verificationData.instagramId && <p className="text-sm text-gray-600">Instagram: <span className="font-medium text-[#8B5E3C]">@{verificationData.instagramId}</span></p>}
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm text-[#3E2723]">
-                <div>
-                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Ticket Number</span>
-                  <span className="font-mono">{verificationData.ticketNumber}</span>
+              {/* EVENT INFORMATION */}
+              <div>
+                <h4 className="text-xs font-bold text-[#A89F91] uppercase tracking-wider mb-3 border-b border-gray-100 pb-1">Event Information</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2 text-sm">
+                  <div>
+                    <span className="block text-xs text-gray-500">Event</span>
+                    <span className="font-bold text-[#3E2723]">{verificationData.eventName}</span>
+                  </div>
+                  {verificationData.eventCategory && (
+                    <div>
+                      <span className="block text-xs text-gray-500">Category</span>
+                      <span className="font-medium text-[#3E2723]">{verificationData.eventCategory}</span>
+                    </div>
+                  )}
+                  {verificationData.eventDate && (
+                    <div>
+                      <span className="block text-xs text-gray-500">Date</span>
+                      <span className="font-medium text-[#3E2723]">{new Date(verificationData.eventDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {verificationData.startTime && (
+                    <div>
+                      <span className="block text-xs text-gray-500">Time</span>
+                      <span className="font-medium text-[#3E2723]">{verificationData.startTime}</span>
+                    </div>
+                  )}
+                  {verificationData.venueName && (
+                    <div className="col-span-2">
+                      <span className="block text-xs text-gray-500">Venue</span>
+                      <span className="font-medium text-[#3E2723]">{verificationData.venueName}{verificationData.city ? `, ${verificationData.city}` : ''}</span>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Registered</span>
-                  <span>{new Date(verificationData.registrationDate).toLocaleDateString()}</span>
+              </div>
+
+              {/* TICKET INFORMATION */}
+              <div>
+                <h4 className="text-xs font-bold text-[#A89F91] uppercase tracking-wider mb-3 border-b border-gray-100 pb-1">Ticket Information</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2 text-sm bg-[#FDFBF7] p-4 rounded-xl border border-[#E8DCC4]">
+                  <div>
+                    <span className="block text-xs text-gray-500">Ticket Number</span>
+                    <span className="font-mono font-bold text-[#8B5E3C]">{verificationData.ticketNumber}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Registration ID</span>
+                    <span className="font-mono text-xs text-gray-600 truncate">{verificationData.registrationId}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Registration Time</span>
+                    <span className="font-medium text-[#3E2723]">{new Date(verificationData.registrationDate).toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Payment Status</span>
+                    {verificationData.paymentStatus === 'completed' ? (
+                      <span className="font-bold text-green-600">PAID</span>
+                    ) : verificationData.paymentStatus === 'pending' ? (
+                      <span className="font-bold text-orange-600">PENDING</span>
+                    ) : (
+                      <span className="font-bold text-gray-600 uppercase">{verificationData.paymentStatus || 'FREE'}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Ticket Price</span>
+                    <span className="font-medium text-[#3E2723]">₹{verificationData.ticketPrice}</span>
+                  </div>
+                  <div>
+                    <span className="block text-xs text-gray-500">Seat Number</span>
+                    <span className="font-medium text-[#3E2723]">{verificationData.seatNumber}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Email</span>
-                  <span className="truncate">{verificationData.email}</span>
+              </div>
+
+            </div>
+          )}
+
+          <DialogFooter className="flex flex-col gap-3 mt-4 border-t border-[#E8DCC4] pt-4">
+            {isConfirmingCheckIn ? (
+              <div className="w-full">
+                <p className="text-center font-bold text-[#3E2723] mb-4">Confirm attendee check-in?</p>
+                <div className="flex gap-3 justify-center w-full">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsConfirmingCheckIn(false)}
+                    className="flex-1 border-[#E8DCC4] text-[#8B5E3C] hover:bg-[#F5E6D3]/50"
+                  >
+                    No
+                  </Button>
+                  <Button 
+                    onClick={confirmCheckIn}
+                    disabled={isCheckingIn}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-md"
+                  >
+                    <CheckCircle className="mr-2 size-4" /> 
+                    {isCheckingIn ? 'Checking In...' : 'Yes, Check-In'}
+                  </Button>
                 </div>
+              </div>
+            ) : (
+              <div className="flex gap-3 justify-end w-full">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsVerifyModalOpen(false)}
+                  className="border-[#E8DCC4] text-[#8B5E3C] hover:bg-[#F5E6D3]/50"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => setIsConfirmingCheckIn(true)}
+                  className="bg-[#8B5E3C] hover:bg-[#5C3A21] text-white shadow-md"
+                >
+                  Continue Check-In
+                </Button>
+              </div>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* SUCCESS MODAL */}
+      <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
+        <DialogContent className="sm:max-w-md bg-white border-green-200 rounded-2xl text-center p-8">
+          <div className="flex justify-center mb-4">
+            <div className="bg-green-100 text-green-600 p-4 rounded-full">
+              <CheckCircle className="size-12" />
+            </div>
+          </div>
+          <DialogTitle className="text-2xl font-black text-[#3E2723] mb-2">
+            Check-In Successful
+          </DialogTitle>
+          {successData && (
+            <div className="text-left bg-[#FDFBF7] p-4 rounded-xl border border-[#E8DCC4] mt-6">
+              <p className="text-sm text-gray-500 mb-1">Attendee Name</p>
+              <p className="font-bold text-[#3E2723] mb-3">{successData.attendeeName}</p>
+              
+              <p className="text-sm text-gray-500 mb-1">Event Name</p>
+              <p className="font-bold text-[#3E2723] mb-3">{successData.eventName}</p>
+
+              <div className="flex justify-between">
                 <div>
-                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Phone</span>
-                  <span>{verificationData.phone}</span>
+                  <p className="text-sm text-gray-500 mb-1">Ticket Number</p>
+                  <p className="font-mono text-[#8B5E3C]">{successData.ticketNumber}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500 mb-1">Check-In Time</p>
+                  <p className="font-medium text-[#3E2723]">{new Date(successData.checkedInAt).toLocaleTimeString()}</p>
                 </div>
               </div>
             </div>
           )}
-
-          <DialogFooter className="flex gap-2 sm:gap-0 mt-4 border-t border-[#E8DCC4] pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsVerifyModalOpen(false)}
-              className="border-[#E8DCC4] text-[#8B5E3C] hover:bg-[#F5E6D3]/50"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={confirmCheckIn}
-              disabled={isCheckingIn}
-              className="bg-green-600 hover:bg-green-700 text-white shadow-md"
-            >
-              <CheckCircle className="mr-2 size-4" /> 
-              {isCheckingIn ? 'Checking In...' : 'Confirm Check-In'}
-            </Button>
-          </DialogFooter>
+          <Button 
+            onClick={() => setIsSuccessModalOpen(false)}
+            className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white"
+          >
+            Done
+          </Button>
         </DialogContent>
       </Dialog>
+
+      {/* ALREADY SCANNED MODAL */}
+      <Dialog open={isErrorModalOpen} onOpenChange={setIsErrorModalOpen}>
+        <DialogContent className="sm:max-w-md bg-white border-red-200 rounded-2xl text-center p-8">
+          <div className="flex justify-center mb-4">
+            <div className="bg-red-100 text-red-600 p-4 rounded-full">
+              <XCircle className="size-12" />
+            </div>
+          </div>
+          <DialogTitle className="text-2xl font-black text-[#3E2723] mb-2">
+            Ticket Already Used
+          </DialogTitle>
+          <p className="text-gray-600 mb-6">This ticket has already been checked in and cannot be used again.</p>
+          
+          {errorData && (
+            <div className="text-left bg-[#FDFBF7] p-4 rounded-xl border border-red-100 mt-2 space-y-3">
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase">Attendee Name</p>
+                <p className="font-bold text-[#3E2723]">{errorData.attendeeName}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase">Previous Check-In Time</p>
+                  <p className="font-medium text-red-600">{new Date(errorData.checkedInAt).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase">Checked-In By</p>
+                  <p className="font-medium text-[#3E2723]">{errorData.checkedInBy}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <Button 
+            onClick={() => setIsErrorModalOpen(false)}
+            className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

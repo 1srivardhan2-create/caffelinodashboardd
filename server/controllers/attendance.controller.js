@@ -20,11 +20,11 @@ exports.verifyTicket = async (req, res) => {
     ticketNumber = String(ticketNumber).replace(/['"]/g, '').trim();
 
     // Find the Registration
-    let registration = await Registration.findOne({ ticketNumber }).populate('eventId');
+    let registration = await Registration.findOne({ ticketNumber }).populate('eventId').populate('userId', 'profilePicture fullName');
     
     // Fallback: If it's a valid MongoDB ObjectId
     if (!registration && mongoose.Types.ObjectId.isValid(ticketNumber)) {
-      registration = await Registration.findById(ticketNumber).populate('eventId');
+      registration = await Registration.findById(ticketNumber).populate('eventId').populate('userId', 'profilePicture fullName');
     }
 
     if (!registration) {
@@ -40,13 +40,22 @@ exports.verifyTicket = async (req, res) => {
 
     // Check if attendance already recorded
     if (registration.checkedIn) {
+      // Find out who checked them in if possible
+      let checkedInByName = "Unknown Organizer";
+      if (registration.checkedInBy) {
+        const User = require('../models/User.model');
+        const organizer = await User.findById(registration.checkedInBy);
+        if (organizer) checkedInByName = organizer.fullName;
+      }
+      
       return res.status(400).json({ 
         success: false, 
         message: '❌ Already Checked In',
         data: {
           attendeeName: registration.userName,
           eventName: event.eventName,
-          checkedInAt: registration.checkedInAt
+          checkedInAt: registration.checkedInAt,
+          checkedInBy: checkedInByName
         }
       });
     }
@@ -58,9 +67,23 @@ exports.verifyTicket = async (req, res) => {
         attendeeName: registration.userName,
         email: registration.email,
         phone: registration.phone,
+        profilePhoto: registration.userId?.profilePicture || null,
         ticketNumber: registration.ticketNumber || ticketNumber,
+        registrationId: registration._id,
         eventName: event.eventName,
-        registrationDate: registration.registrationDate
+        eventCategory: event.eventCategory,
+        eventDate: event.eventDate,
+        startTime: event.startTime,
+        venueName: event.venueName,
+        address: event.address,
+        city: event.city,
+        state: event.state,
+        instagramId: event.eventInstagramId,
+        registrationDate: registration.registrationDate,
+        paymentStatus: registration.paymentStatus,
+        ticketPrice: (registration.amountPaid / registration.ticketCount) || event.ticketPrice || 0,
+        seatNumber: "Unassigned", // Can map to real seat number if added to Registration model in future
+        checkedIn: registration.checkedIn
       }
     });
 
@@ -149,6 +172,7 @@ exports.getAttendanceList = async (req, res) => {
       checkedIn: true 
     })
     .populate('eventId', 'eventName')
+    .populate('checkedInBy', 'fullName')
     .sort({ checkedInAt: -1 });
 
     // Map to expected format for the frontend
@@ -159,7 +183,9 @@ exports.getAttendanceList = async (req, res) => {
       phone: a.phone,
       ticketNumber: a.ticketNumber || a._id.toString(),
       eventName: a.eventId?.eventName || 'Unknown Event',
-      checkedInAt: a.checkedInAt
+      checkedInAt: a.checkedInAt,
+      paymentStatus: a.paymentStatus,
+      checkedInBy: a.checkedInBy?.fullName || 'Unknown'
     }));
 
     res.status(200).json({ success: true, attendance: mappedList });
