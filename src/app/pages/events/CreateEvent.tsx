@@ -218,9 +218,9 @@ export default function CreateEvent() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < totalSteps) {
-      triggerAutoSave();
+      await triggerAutoSave();
       setCurrentStep(currentStep + 1);
     }
   };
@@ -491,9 +491,10 @@ export default function CreateEvent() {
               {currentStep < totalSteps ? (
                 <Button
                   onClick={handleNext}
+                  disabled={isSavingDraft}
                   className="bg-[#3E2723] text-white hover:bg-[#5C3A21] px-8"
                 >
-                  Next Step
+                  {isSavingDraft ? 'Saving...' : 'Next Step'}
                   <ArrowRight className="ml-2 size-4" />
                 </Button>
               ) : (
