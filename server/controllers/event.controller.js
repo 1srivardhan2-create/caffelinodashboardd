@@ -59,7 +59,7 @@ exports.saveDraft = async (req, res) => {
     const { _id, ...eventData } = req.body;
     
     // Encrypt sensitive bank details if present
-    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId'];
+    const sensitiveFields = ['accountHolderName', 'paymentMobileNumber', 'upiId'];
     sensitiveFields.forEach(field => {
       if (eventData[field]) {
         eventData[field] = encrypt(eventData[field]);
@@ -91,16 +91,14 @@ exports.createEvent = async (req, res) => {
       eventDate, startTime, endTime, timezone,
       ticketType, ticketPrice, maxSeats, availableSeats,
       organizerName, email, phone, eventInstagramId, organizerId,
-      accountHolderName, bankName, accountNumber, ifscCode, upiId
+      accountHolderName, paymentMobileNumber, upiId
     } = req.body;
 
     // Encrypt sensitive bank details
     const encryptedBankDetails = {
       accountHolderName: encrypt(accountHolderName),
-      bankName: encrypt(bankName),
-      accountNumber: encrypt(accountNumber),
-      ifscCode: encrypt(ifscCode),
-      upiId: encrypt(upiId),
+      paymentMobileNumber: encrypt(paymentMobileNumber),
+      upiId: encrypt(upiId)
     };
 
     const newEvent = new Event({
@@ -134,7 +132,7 @@ exports.updateEvent = async (req, res) => {
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
 
     // Handle encryption if bank details are updated
-    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'upiId'];
+    const sensitiveFields = ['accountHolderName', 'paymentMobileNumber', 'upiId'];
     sensitiveFields.forEach(field => {
       if (updateData[field]) {
         updateData[field] = encrypt(updateData[field]);
@@ -172,7 +170,7 @@ exports.deleteEvent = async (req, res) => {
 exports.getAllEvents = async (req, res) => {
   try {
     // Exclude bank details from general query
-    const events = await Event.find().select('-accountHolderName -bankName -accountNumber -ifscCode -upiId');
+    const events = await Event.find().select('-accountHolderName -paymentMobileNumber -upiId');
     res.status(200).json({ success: true, events });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching events', error: error.message });
@@ -190,9 +188,7 @@ exports.getEventById = async (req, res) => {
     // Assuming frontend calls this for view: we exclude sensitive info.
     const eventObj = event.toObject();
     delete eventObj.accountHolderName;
-    delete eventObj.bankName;
-    delete eventObj.accountNumber;
-    delete eventObj.ifscCode;
+    delete eventObj.paymentMobileNumber;
     delete eventObj.upiId;
 
     res.status(200).json({ success: true, event: eventObj });

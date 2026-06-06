@@ -471,81 +471,59 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
 
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-[#3E2723] flex items-center gap-2 border-b border-[#E8DCC4] pb-2">
-          <Lock className="size-4 text-[#8B5E3C]" /> Bank Details
+          <Lock className="size-4 text-[#8B5E3C]" /> Payment Receiver Details
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="accHolderName" className="text-[#3E2723] font-semibold">Account Holder Name *</Label>
+            <Label htmlFor="accHolderName" className="text-[#3E2723] font-semibold">Name *</Label>
             <Input 
               id="accHolderName" 
               value={formData.accHolderName} 
               onChange={(e) => setFormData({ ...formData, accHolderName: e.target.value })}
-              placeholder="As per bank records" 
+              placeholder="Full Name" 
               className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bankName" className="text-[#3E2723] font-semibold">Bank Name *</Label>
+            <Label htmlFor="paymentMobileNumber" className="text-[#3E2723] font-semibold">Payment Mobile Number *</Label>
             <Input 
-              id="bankName" 
-              value={formData.bankName} 
-              onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-              placeholder="e.g. HDFC Bank" 
-              className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11"
+              id="paymentMobileNumber" 
+              value={formData.paymentMobileNumber} 
+              onChange={(e) => setFormData({ ...formData, paymentMobileNumber: e.target.value })}
+              placeholder="10-digit mobile number" 
+              className={`border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11 ${errors.paymentMobileNumber ? 'border-red-500' : ''}`}
             />
+            {errors.paymentMobileNumber && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.paymentMobileNumber}</p>}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="accNumber" className="text-[#3E2723] font-semibold">Account Number *</Label>
-            <Input 
-              id="accNumber"
-              type="password"
-              value={formData.accNumber} 
-              onChange={(e) => setFormData({ ...formData, accNumber: e.target.value })}
-              placeholder="Enter account number" 
-              className={`border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11 ${errors.accNumber ? 'border-red-500' : ''}`}
-            />
-            {errors.accNumber && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.accNumber}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmAccNumber" className="text-[#3E2723] font-semibold">Confirm Account Number *</Label>
-            <Input 
-              id="confirmAccNumber"
-              type="text"
-              value={formData.confirmAccNumber} 
-              onChange={(e) => setFormData({ ...formData, confirmAccNumber: e.target.value })}
-              placeholder="Re-enter account number" 
-              className={`border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11 ${errors.confirmAccNumber ? 'border-red-500' : ''}`}
-            />
-            {errors.confirmAccNumber && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.confirmAccNumber}</p>}
-          </div>
-        </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="ifscCode" className="text-[#3E2723] font-semibold">IFSC Code *</Label>
-            <Input 
-              id="ifscCode" 
-              value={formData.ifscCode} 
-              onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value.toUpperCase() })}
-              placeholder="e.g. HDFC0001234" 
-              className={`border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11 ${errors.ifscCode ? 'border-red-500' : ''}`}
-            />
-            {errors.ifscCode && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.ifscCode}</p>}
-          </div>
           <div className="space-y-2">
             <Label htmlFor="upiId" className="text-[#3E2723] font-semibold">UPI ID *</Label>
             <Input 
               id="upiId" 
+              type="password"
               value={formData.upiId} 
               onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
               placeholder="e.g. user@okicici" 
               className={`border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11 ${errors.upiId ? 'border-red-500' : ''}`}
             />
             {errors.upiId && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.upiId}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmUpiId" className="text-[#3E2723] font-semibold">Confirm UPI ID *</Label>
+            <Input 
+              id="confirmUpiId" 
+              type="text"
+              value={formData.confirmUpiId} 
+              onChange={(e) => setFormData({ ...formData, confirmUpiId: e.target.value })}
+              placeholder="Re-enter UPI ID" 
+              className={`border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11 ${errors.confirmUpiId ? 'border-red-500' : ''}`}
+            />
+            {errors.confirmUpiId && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.confirmUpiId}</p>}
           </div>
         </div>
       </div>

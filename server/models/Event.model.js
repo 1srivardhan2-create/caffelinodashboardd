@@ -44,11 +44,9 @@ const EventSchema = new mongoose.Schema({
   eventInstagramId: { type: String },
   organizerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  // STEP 7 - Bank Details
+  // STEP 7 - Payment Details
   accountHolderName: { type: String },
-  bankName: { type: String },
-  accountNumber: { type: String },
-  ifscCode: { type: String },
+  paymentMobileNumber: { type: String },
   upiId: { type: String },
 
   // EVENT STATUS

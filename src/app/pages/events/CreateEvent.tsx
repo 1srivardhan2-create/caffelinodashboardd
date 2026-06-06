@@ -57,11 +57,9 @@ export default function CreateEvent() {
     eventInstagramId: '',
     // Payment Fields
     accHolderName: '',
-    bankName: '',
-    accNumber: '',
-    confirmAccNumber: '',
-    ifscCode: '',
+    paymentMobileNumber: '',
     upiId: '',
+    confirmUpiId: '',
   });
 
   useEffect(() => {
@@ -110,11 +108,9 @@ export default function CreateEvent() {
               phone: ev.phone || '',
               eventInstagramId: ev.eventInstagramId || '',
               accHolderName: ev.accountHolderName || '',
-              bankName: ev.bankName || '',
-              accNumber: ev.accountNumber || '',
-              confirmAccNumber: ev.accountNumber || '',
-              ifscCode: ev.ifscCode || '',
+              paymentMobileNumber: ev.paymentMobileNumber || '',
               upiId: ev.upiId || '',
+              confirmUpiId: ev.upiId || '',
             }));
             if (!eventId) {
               toast.success('Draft restored successfully');
@@ -132,27 +128,26 @@ export default function CreateEvent() {
   }, [eventId, draftId, user]);
 
   const [errors, setErrors] = useState({
-    accNumber: '',
-    confirmAccNumber: '',
-    ifscCode: '',
-    upiId: ''
+    paymentMobileNumber: '',
+    upiId: '',
+    confirmUpiId: ''
   });
 
   const validatePayment = () => {
     let isValid = true;
-    const newErrors = { accNumber: '', confirmAccNumber: '', ifscCode: '', upiId: '' };
+    const newErrors = { paymentMobileNumber: '', upiId: '', confirmUpiId: '' };
 
-    if (formData.accNumber !== formData.confirmAccNumber) {
-      newErrors.confirmAccNumber = 'Account numbers do not match';
+    if (!formData.paymentMobileNumber || !/^\d{10}$/.test(formData.paymentMobileNumber)) {
+      newErrors.paymentMobileNumber = 'Valid 10-digit mobile number is required';
+      isValid = false;
+    }
+
+    if (formData.upiId !== formData.confirmUpiId) {
+      newErrors.confirmUpiId = 'UPI IDs do not match';
       isValid = false;
     }
     
-    if (formData.ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifscCode)) {
-      newErrors.ifscCode = 'Invalid IFSC code format';
-      isValid = false;
-    }
-
-    if (formData.upiId && !/^[\w.-]+@[\w.-]+$/.test(formData.upiId)) {
+    if (!formData.upiId || !/^[\w.-]+@[\w.-]+$/.test(formData.upiId)) {
       newErrors.upiId = 'Invalid UPI ID format';
       isValid = false;
     }
@@ -198,9 +193,7 @@ export default function CreateEvent() {
         phone: formData.phone,
         eventInstagramId: formData.eventInstagramId,
         accountHolderName: formData.accHolderName,
-        bankName: formData.bankName,
-        accountNumber: formData.accNumber,
-        ifscCode: formData.ifscCode,
+        paymentMobileNumber: formData.paymentMobileNumber,
         upiId: formData.upiId,
         organizerId: user?.id,
       };
@@ -251,8 +244,8 @@ export default function CreateEvent() {
         return;
       }
       
-      if (!formData.accNumber || !formData.ifscCode) {
-        toast.error('Account Number and IFSC Code are mandatory.');
+      if (!formData.paymentMobileNumber || !formData.upiId) {
+        toast.error('Payment Mobile Number and UPI ID are mandatory.');
         return;
       }
     }
@@ -285,9 +278,7 @@ export default function CreateEvent() {
         phone: formData.phone || '0000000000',
         eventInstagramId: formData.eventInstagramId,
         accountHolderName: formData.accHolderName,
-        bankName: formData.bankName,
-        accountNumber: formData.accNumber,
-        ifscCode: formData.ifscCode,
+        paymentMobileNumber: formData.paymentMobileNumber,
         upiId: formData.upiId,
         organizerId: user?.id,
       };
@@ -340,9 +331,7 @@ export default function CreateEvent() {
   ];
 
   if (isPublished) {
-    const maskedAccount = formData.accNumber.length > 4 
-      ? `•••• ${formData.accNumber.slice(-4)}` 
-      : '••••';
+  const maskedUPI = formData.upiId ? formData.upiId : '';
 
     return (
       <div className="max-w-3xl mx-auto pt-10">
@@ -382,8 +371,8 @@ export default function CreateEvent() {
               </p>
               <div className="bg-white p-3 rounded-lg border border-[#E8DCC4] flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-[#3E2723]">{formData.bankName || 'Bank'}</p>
-                  <p className="text-sm font-medium text-gray-500">{maskedAccount}</p>
+                  <p className="font-bold text-[#3E2723]">Payment Details</p>
+                  <p className="text-sm font-medium text-gray-500">{maskedUPI}</p>
                 </div>
                 <Button variant="ghost" size="sm" className="text-[#8B5E3C]"><Copy className="size-4" /></Button>
               </div>
