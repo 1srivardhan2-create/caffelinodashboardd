@@ -124,23 +124,41 @@ exports.scanTicket = async (req, res) => {
 
     // Check if attendance already recorded
     if (registration.checkedIn) {
+      let checkedInByName = "Unknown Organizer";
+      if (registration.checkedInBy) {
+        const User = require('../models/User.model');
+        const organizer = await User.findById(registration.checkedInBy);
+        if (organizer) checkedInByName = organizer.fullName;
+      }
+
       return res.status(400).json({ 
         success: false, 
         message: '❌ Already Checked In',
         data: {
           attendeeName: registration.userName,
           eventName: event.eventName,
-          checkedInAt: registration.checkedInAt
+          checkedInAt: registration.checkedInAt,
+          checkedInBy: checkedInByName
         }
       });
     }
 
-    // Update Registration to Checked-In
+    // Update Registration to Checked-In using updateOne to bypass strict validation on other fields
+    await Registration.updateOne(
+      { _id: registration._id },
+      { 
+        $set: { 
+          checkedIn: true, 
+          checkedInAt: new Date(), 
+          checkedInBy: organizerId 
+        } 
+      }
+    );
+
+    // Refresh the registration object with new values for the response
     registration.checkedIn = true;
     registration.checkedInAt = new Date();
     registration.checkedInBy = organizerId;
-    
-    await registration.save();
 
     res.status(200).json({ 
       success: true, 
