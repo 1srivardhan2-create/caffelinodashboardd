@@ -229,8 +229,8 @@ export default function CreateEvent() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSaveDraft = () => {
-    triggerAutoSave();
+  const handleSaveDraft = async () => {
+    await triggerAutoSave();
     navigate('/events/dashboard');
   };
 
