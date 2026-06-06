@@ -22,6 +22,7 @@ import CreateEvent from './pages/events/CreateEvent';
 import ManageEvents from './pages/events/ManageEvents';
 import EventsEarnings from './pages/events/EventsEarnings';
 import MyEvents from './pages/events/MyEvents';
+import TicketsList from './pages/events/TicketsList';
 import EventErrorBoundary from './components/events/EventErrorBoundary';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -189,6 +190,17 @@ export const router = createBrowserRouter([
       <EventsProtectedRoute>
         <EventsLayout>
           <EventsEarnings />
+        </EventsLayout>
+      </EventsProtectedRoute>
+    ),
+    errorElement: <EventErrorBoundary />
+  },
+  {
+    path: '/events/tickets',
+    element: (
+      <EventsProtectedRoute>
+        <EventsLayout>
+          <TicketsList />
         </EventsLayout>
       </EventsProtectedRoute>
     ),

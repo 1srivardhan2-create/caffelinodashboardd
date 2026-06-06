@@ -464,3 +464,24 @@ exports.exportEventRegistrations = async (req, res) => {
   }
 };
 
+// Get All Tickets for an Organizer
+exports.getMyTickets = async (req, res) => {
+  try {
+    const organizerId = req.query.organizerId || req.user?.userId;
+    if (!organizerId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    // Find all events belonging to this organizer
+    const events = await Event.find({ organizerId }).select('_id');
+    const eventIds = events.map(e => e._id);
+
+    // Find all tickets for these events
+    const tickets = await Ticket.find({ eventId: { $in: eventIds } })
+      .populate('eventId', 'eventName cafeName')
+      .populate('registrationId', 'userName email phone amountPaid')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, tickets });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching tickets', error: error.message });
+  }
+};

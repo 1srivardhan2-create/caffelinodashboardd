@@ -33,6 +33,7 @@ export default function EventsLayout({ children }: EventsLayoutProps) {
   const navItems = [
     { to: '/events/dashboard', icon: LayoutDashboard, label: 'Overview' },
     { to: '/events/earnings', icon: IndianRupee, label: 'Earnings' },
+    { to: '/events/tickets', icon: Ticket, label: 'Tickets Sold' },
     { to: '/events/create', icon: PlusCircle, label: 'Create Event' },
     { to: '/events/my-events', icon: ListOrdered, label: 'My Events' },
     { to: '/events/manage', icon: CalendarDays, label: 'Manage Events' },

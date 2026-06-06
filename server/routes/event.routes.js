@@ -24,6 +24,9 @@ router.get('/my-events', eventController.getMyEvents);
 // Get Dashboard Stats
 router.get('/dashboard', eventController.getDashboardStats);
 
+// Get My Tickets
+router.get('/my-tickets', eventController.getMyTickets);
+
 // Get Earnings Stats
 router.get('/earnings', eventController.getEarningsStats);
 
