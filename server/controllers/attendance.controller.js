@@ -2,21 +2,33 @@ const Attendance = require('../models/Attendance.model');
 const Ticket = require('../models/Ticket.model');
 const Event = require('../models/Event.model');
 const Registration = require('../models/Registration.model');
+const mongoose = require('mongoose');
 
 // Verify Ticket before Check-In
 exports.verifyTicket = async (req, res) => {
   try {
-    const { ticketNumber } = req.query;
+    let { ticketNumber } = req.query;
     const organizerId = req.user.userId;
+
+    console.log(`[Verify Ticket] Received raw ticketNumber: '${ticketNumber}', organizerId: ${organizerId}`);
 
     if (!ticketNumber) {
       return res.status(400).json({ success: false, message: 'Ticket number is required' });
     }
 
+    // Sanitize string (remove accidental quotes or whitespace)
+    ticketNumber = String(ticketNumber).replace(/['"]/g, '').trim();
+
     // Find the Ticket
-    const ticket = await Ticket.findOne({ ticketNumber }).populate('eventId').populate('registrationId');
+    let ticket = await Ticket.findOne({ ticketNumber }).populate('eventId').populate('registrationId');
+    
+    // Fallback: If it's a valid MongoDB ObjectId, maybe the old QR code used _id
+    if (!ticket && mongoose.Types.ObjectId.isValid(ticketNumber)) {
+      ticket = await Ticket.findById(ticketNumber).populate('eventId').populate('registrationId');
+    }
+
     if (!ticket) {
-      return res.status(404).json({ success: false, message: 'Invalid Ticket' });
+      return res.status(404).json({ success: false, message: `Invalid Ticket: Not found (${ticketNumber})` });
     }
 
     const event = ticket.eventId;
@@ -62,12 +74,15 @@ exports.verifyTicket = async (req, res) => {
 // Scan Ticket & Record Attendance
 exports.scanTicket = async (req, res) => {
   try {
-    const { ticketNumber } = req.body;
+    let { ticketNumber } = req.body;
     const organizerId = req.user.userId;
 
     if (!ticketNumber) {
       return res.status(400).json({ success: false, message: 'Ticket number is required' });
     }
+
+    // Sanitize
+    ticketNumber = String(ticketNumber).replace(/['"]/g, '').trim();
 
     // Check if attendance already recorded
     const existingAttendance = await Attendance.findOne({ ticketNumber });
@@ -84,9 +99,13 @@ exports.scanTicket = async (req, res) => {
     }
 
     // Find the Ticket
-    const ticket = await Ticket.findOne({ ticketNumber }).populate('eventId').populate('registrationId');
+    let ticket = await Ticket.findOne({ ticketNumber }).populate('eventId').populate('registrationId');
+    if (!ticket && mongoose.Types.ObjectId.isValid(ticketNumber)) {
+      ticket = await Ticket.findById(ticketNumber).populate('eventId').populate('registrationId');
+    }
+
     if (!ticket) {
-      return res.status(404).json({ success: false, message: 'Invalid Ticket' });
+      return res.status(404).json({ success: false, message: `Invalid Ticket: Not found (${ticketNumber})` });
     }
 
     const event = ticket.eventId;
