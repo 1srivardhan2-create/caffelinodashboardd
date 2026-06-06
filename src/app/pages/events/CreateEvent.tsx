@@ -78,7 +78,7 @@ export default function CreateEvent() {
       const idToLoad = eventId || draftId;
       if (idToLoad) {
         try {
-          const data = await api.get(`/api/events/${idToLoad}`);
+          const data = await api.get(`/api/events/edit/${idToLoad}`);
           if (data.success && data.event) {
             const ev = data.event;
             setEventStatus(ev.status);

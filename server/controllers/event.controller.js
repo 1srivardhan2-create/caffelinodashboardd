@@ -197,6 +197,28 @@ exports.getEventById = async (req, res) => {
   }
 };
 
+// Get Event By ID for Edit (decrypts sensitive info)
+exports.getEventForEdit = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+    
+    // Check if requester is the organizer
+    if (event.organizerId.toString() !== req.user?.userId) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    const eventObj = event.toObject();
+    if (eventObj.accountHolderName) eventObj.accountHolderName = decrypt(eventObj.accountHolderName);
+    if (eventObj.paymentMobileNumber) eventObj.paymentMobileNumber = decrypt(eventObj.paymentMobileNumber);
+    if (eventObj.upiId) eventObj.upiId = decrypt(eventObj.upiId);
+
+    res.status(200).json({ success: true, event: eventObj });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching event for edit', error: error.message });
+  }
+};
+
 // Publish Event
 exports.publishEvent = async (req, res) => {
   try {

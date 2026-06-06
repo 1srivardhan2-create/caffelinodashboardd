@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const eventController = require('../controllers/event.controller');
 const upload = require('../middlewares/upload');
+const { verifyToken } = require('../middlewares/auth.middleware');
 
 // Upload Banner
 router.post('/upload-banner', upload.single('banner'), eventController.uploadBanner);
@@ -41,6 +42,9 @@ router.get('/:eventId/export', eventController.exportEventRegistrations);
 
 // Get Event by ID
 router.get('/:id', eventController.getEventById);
+
+// Get Event for Edit (protected)
+router.get('/edit/:id', verifyToken, eventController.getEventForEdit);
 
 // Save Draft
 router.post('/save-draft', eventController.saveDraft);
