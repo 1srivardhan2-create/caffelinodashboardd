@@ -167,8 +167,9 @@ export default function CreateEvent() {
   const triggerAutoSave = async () => {
     setIsSavingDraft(true);
     try {
+      const currentEventId = eventId || draftId;
       const payload = {
-        ...(draftId ? { _id: draftId } : {}),
+        ...(currentEventId ? { _id: currentEventId } : {}),
         eventName: formData.name,
         eventDescription: formData.description,
         eventCategory: formData.category,
@@ -198,17 +199,17 @@ export default function CreateEvent() {
         organizerId: user?.id,
       };
 
-      const endpoint = eventStatus === 'published' && draftId ? `/api/events/update/${draftId}` : '/api/events/save-draft';
+      const endpoint = currentEventId ? `/api/events/update/${currentEventId}` : '/api/events/save-draft';
       const res = await api.post(endpoint, payload);
       
-      if (res.success && res.event && eventStatus === 'draft') {
+      if (res.success && res.event && !currentEventId) {
         setDraftId(res.event._id);
         if (!eventId) {
           localStorage.setItem('currentDraftId', res.event._id);
         }
         toast.success('Draft Saved');
-      } else if (res.success && eventStatus === 'published') {
-        toast.success('Changes Saved');
+      } else if (res.success && currentEventId) {
+        // Automatically saved
       }
     } catch (err) {
       console.error('Auto save failed', err);
@@ -252,8 +253,9 @@ export default function CreateEvent() {
     
     setIsSubmitting(true);
     try {
+      const currentEventId = eventId || draftId;
       const payload = {
-        ...(draftId ? { _id: draftId } : {}),
+        ...(currentEventId ? { _id: currentEventId } : {}),
         eventName: formData.name,
         eventDescription: formData.description,
         eventCategory: formData.category,
@@ -284,9 +286,9 @@ export default function CreateEvent() {
       };
 
       let data;
-      if (draftId && eventStatus === 'published') {
+      if (currentEventId && eventStatus === 'published') {
         // Just update it and don't change status to published again, it's already published
-        data = await api.post(`/api/events/update/${draftId}`, payload);
+        data = await api.post(`/api/events/update/${currentEventId}`, payload);
         if (data.success) {
           setIsPublished(true);
           if (!eventId) localStorage.removeItem('currentDraftId');
@@ -297,7 +299,7 @@ export default function CreateEvent() {
         return;
       }
 
-      data = await api.post(draftId ? `/api/events/update/${draftId}` : '/api/events/create', payload);
+      data = await api.post(currentEventId ? `/api/events/update/${currentEventId}` : '/api/events/create', payload);
 
       if (data.success) {
         const idToPublish = data.event._id;
