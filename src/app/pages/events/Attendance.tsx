@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../../services/api';
 import { Button } from '../../components/ui/button';
-import { ScanLine, Search, Download, CheckCircle, Clock, Users, XCircle, AlertCircle } from 'lucide-react';
+import { ScanLine, Search, Download, CheckCircle, Clock, Users, XCircle, AlertCircle, Camera } from 'lucide-react';
 import { toast } from 'sonner';
+import QRScannerModal from '../../components/events/QRScannerModal';
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from '../../components/ui/dialog';
 
 export default function Attendance() {
   const [stats, setStats] = useState({
@@ -15,6 +17,11 @@ export default function Attendance() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all'); // all, checked-in, pending (simulated if we had full list)
+
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [verificationData, setVerificationData] = useState<any>(null);
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -66,6 +73,60 @@ export default function Attendance() {
     document.body.removeChild(link);
   };
 
+  const handleScanSuccess = async (qrData: any) => {
+    // Determine the ticket number from either a JSON object or a raw string
+    const ticketNumber = qrData.ticketNumber || qrData;
+    if (!ticketNumber) {
+      toast.error('Invalid QR Code format.');
+      setIsScannerOpen(false);
+      return;
+    }
+
+    try {
+      const res = await api.get(`/api/attendance/verify?ticketNumber=${encodeURIComponent(ticketNumber)}`);
+      
+      setIsScannerOpen(false); // Close camera modal first
+
+      if (res.success) {
+        setVerificationData(res.data);
+        setIsVerifyModalOpen(true);
+      } else {
+        // If the ticket was already checked in, show error with timestamp
+        if (res.message === '❌ Already Checked In' && res.data) {
+          toast.error(`❌ Already Checked In: ${res.data.attendeeName} at ${new Date(res.data.checkedInAt).toLocaleString()}`);
+        } else {
+          toast.error(res.message || 'Invalid Ticket');
+        }
+      }
+    } catch (err: any) {
+      setIsScannerOpen(false);
+      toast.error(err?.response?.data?.message || 'Error verifying ticket.');
+    }
+  };
+
+  const confirmCheckIn = async () => {
+    if (!verificationData) return;
+    setIsCheckingIn(true);
+    try {
+      const res = await api.post('/api/attendance/scan', {
+        ticketNumber: verificationData.ticketNumber
+      });
+
+      if (res.success) {
+        toast.success(`${verificationData.attendeeName} Checked In Successfully!`);
+        setIsVerifyModalOpen(false);
+        setVerificationData(null);
+        fetchData(); // Instantly update dashboard
+      } else {
+        toast.error(res.message || 'Failed to check in.');
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Check-in failed.');
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
+
   const filteredList = attendanceList.filter(a => {
     const matchesSearch = 
       a.attendeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,6 +155,12 @@ export default function Attendance() {
           <p className="text-[#8B5E3C] mt-2">Live tracking for your event check-ins.</p>
         </div>
         <div className="flex gap-3">
+          <Button 
+            onClick={() => setIsScannerOpen(true)}
+            className="bg-[#8B5E3C] hover:bg-[#5C3A21] text-white shadow-md shadow-[#8B5E3C]/20"
+          >
+            <Camera className="mr-2 size-4" /> Scan Ticket
+          </Button>
           <Button 
             onClick={exportCSV}
             variant="outline"
@@ -190,6 +257,68 @@ export default function Attendance() {
           </table>
         </div>
       </div>
+
+      {/* Camera Scanner Modal */}
+      <QRScannerModal 
+        isOpen={isScannerOpen} 
+        onClose={() => setIsScannerOpen(false)} 
+        onScanSuccess={handleScanSuccess} 
+      />
+
+      {/* Verification Modal */}
+      <Dialog open={isVerifyModalOpen} onOpenChange={setIsVerifyModalOpen}>
+        <DialogContent className="sm:max-w-md bg-white border-[#E8DCC4] rounded-2xl">
+          <DialogTitle className="text-xl font-bold text-[#3E2723] border-b border-[#E8DCC4] pb-4">
+            Verify Attendee
+          </DialogTitle>
+          
+          {verificationData && (
+            <div className="space-y-4 py-4">
+              <div className="bg-[#FDFBF7] p-4 rounded-xl border border-[#E8DCC4]">
+                <h3 className="font-extrabold text-2xl text-[#3E2723] mb-1">{verificationData.attendeeName}</h3>
+                <p className="text-sm font-bold text-[#8B5E3C] uppercase tracking-wider">{verificationData.eventName}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-sm text-[#3E2723]">
+                <div>
+                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Ticket Number</span>
+                  <span className="font-mono">{verificationData.ticketNumber}</span>
+                </div>
+                <div>
+                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Registered</span>
+                  <span>{new Date(verificationData.registrationDate).toLocaleDateString()}</span>
+                </div>
+                <div>
+                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Email</span>
+                  <span className="truncate">{verificationData.email}</span>
+                </div>
+                <div>
+                  <span className="block text-xs font-bold text-[#A89F91] uppercase mb-1">Phone</span>
+                  <span>{verificationData.phone}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2 sm:gap-0 mt-4 border-t border-[#E8DCC4] pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsVerifyModalOpen(false)}
+              className="border-[#E8DCC4] text-[#8B5E3C] hover:bg-[#F5E6D3]/50"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmCheckIn}
+              disabled={isCheckingIn}
+              className="bg-green-600 hover:bg-green-700 text-white shadow-md"
+            >
+              <CheckCircle className="mr-2 size-4" /> 
+              {isCheckingIn ? 'Checking In...' : 'Confirm Check-In'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

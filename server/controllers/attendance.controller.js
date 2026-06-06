@@ -3,6 +3,62 @@ const Ticket = require('../models/Ticket.model');
 const Event = require('../models/Event.model');
 const Registration = require('../models/Registration.model');
 
+// Verify Ticket before Check-In
+exports.verifyTicket = async (req, res) => {
+  try {
+    const { ticketNumber } = req.query;
+    const organizerId = req.user.userId;
+
+    if (!ticketNumber) {
+      return res.status(400).json({ success: false, message: 'Ticket number is required' });
+    }
+
+    // Find the Ticket
+    const ticket = await Ticket.findOne({ ticketNumber }).populate('eventId').populate('registrationId');
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: 'Invalid Ticket' });
+    }
+
+    const event = ticket.eventId;
+    const registration = ticket.registrationId;
+
+    // Verify the organizer owns this event
+    if (event.organizerId.toString() !== organizerId) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to scan for this event' });
+    }
+
+    // Check if attendance already recorded
+    const existingAttendance = await Attendance.findOne({ ticketNumber });
+    if (existingAttendance) {
+      return res.status(400).json({ 
+        success: false, 
+        message: '❌ Already Checked In',
+        data: {
+          attendeeName: existingAttendance.attendeeName,
+          eventName: existingAttendance.eventName,
+          checkedInAt: existingAttendance.checkedInAt
+        }
+      });
+    }
+
+    // Return the ticket details for verification
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        attendeeName: registration.userName,
+        email: registration.email,
+        phone: registration.phone,
+        ticketNumber: ticketNumber,
+        eventName: event.eventName,
+        registrationDate: registration.registrationDate
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error verifying ticket', error: error.message });
+  }
+};
+
 // Scan Ticket & Record Attendance
 exports.scanTicket = async (req, res) => {
   try {

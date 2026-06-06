@@ -6,6 +6,7 @@ const { verifyToken } = require('../middlewares/auth.middleware');
 // Apply verifyToken to all routes
 router.use(verifyToken);
 
+router.get('/verify', attendanceController.verifyTicket);
 router.post('/scan', attendanceController.scanTicket);
 router.get('/list', attendanceController.getAttendanceList);
 router.get('/stats', attendanceController.getAttendanceStats);
