@@ -121,6 +121,10 @@ export default function CreateEvent() {
           }
         } catch (err) {
           console.error('Failed to load event');
+          if (!eventId) {
+            localStorage.removeItem('currentDraftId');
+            setDraftId(null);
+          }
         }
       }
     };
