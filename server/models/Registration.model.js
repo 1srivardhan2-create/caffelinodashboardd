@@ -16,6 +16,6 @@ const RegistrationSchema = new mongoose.Schema({
   checkedIn: { type: Boolean, default: false },
   checkedInAt: { type: Date },
   checkedInBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'eventregistrations' });
 
 module.exports = mongoose.model('Registration', RegistrationSchema);
