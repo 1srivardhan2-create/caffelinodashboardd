@@ -36,7 +36,6 @@ export default function CreateEvent() {
     category: '',
     bannerUrl: '',
     bannerPublicId: '',
-    cafe: '',
     venue: '',
     address: '',
     mapsLink: '',
@@ -92,7 +91,6 @@ export default function CreateEvent() {
               category: ev.eventCategory || '',
               bannerUrl: ev.bannerUrl || '',
               bannerPublicId: ev.bannerPublicId || '',
-              cafe: ev.cafeName || '',
               venue: ev.venueName || '',
               address: ev.address || '',
               mapsLink: ev.googleMapsLink || '',
@@ -185,7 +183,6 @@ export default function CreateEvent() {
         eventCategory: formData.category,
         bannerUrl: formData.bannerUrl,
         bannerPublicId: formData.bannerPublicId,
-        cafeName: formData.cafe,
         venueName: formData.venue,
         address: formData.address,
         googleMapsLink: formData.mapsLink,
@@ -273,7 +270,6 @@ export default function CreateEvent() {
         eventCategory: formData.category,
         bannerUrl: formData.bannerUrl,
         bannerPublicId: formData.bannerPublicId,
-        cafeName: formData.cafe,
         venueName: formData.venue,
         address: formData.address,
         googleMapsLink: formData.mapsLink,
@@ -378,7 +374,7 @@ export default function CreateEvent() {
               </div>
               <div className="col-span-2">
                 <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Venue</p>
-                <p className="font-medium text-[#3E2723]">{formData.venue || 'TBD'} {formData.cafe ? `at ${formData.cafe}` : ''}</p>
+                <p className="font-medium text-[#3E2723]">{formData.venue || 'TBD'}</p>
               </div>
             </div>
             

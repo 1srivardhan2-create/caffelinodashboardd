@@ -153,17 +153,6 @@ export const Step3Location = ({ formData, setFormData }: any) => {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="cafe" className="text-[#3E2723] font-semibold">Cafe Name *</Label>
-        <Input 
-          id="cafe" 
-          value={formData.cafe} 
-          onChange={(e) => setFormData({ ...formData, cafe: e.target.value })}
-          placeholder="e.g. Caffelino Jubilee Hills" 
-          className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
-        />
-      </div>
-      
-      <div className="space-y-2">
         <Label htmlFor="venue" className="text-[#3E2723] font-semibold">Venue / Room *</Label>
         <Input 
           id="venue" 
