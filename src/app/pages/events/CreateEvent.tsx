@@ -98,12 +98,18 @@ export default function CreateEvent() {
               state: ev.state || '',
               country: ev.country || '',
               pincode: ev.pincode || '',
-              date: ev.eventDate ? new Date(ev.eventDate).toISOString().split('T')[0] : '',
+              date: ev.eventDate ? (() => {
+                const d = new Date(ev.eventDate);
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                return `${dd}-${mm}`;
+              })() : '',
               startTime: ev.startTime || '',
               endTime: ev.endTime || '',
               isPaid: ev.ticketType === 'paid',
               price: ev.ticketPrice?.toString() || '',
-              maxSeats: ev.maxSeats?.toString() || '',
+              maxSeats: ev.maxSeats ? ev.maxSeats.toString() : '',
+              availableSeats: ev.availableSeats ? ev.availableSeats.toString() : '',
               orgName: ev.organizerName || user?.fullName || '',
               email: ev.email || user?.email || '',
               phone: ev.phone || '',
@@ -190,12 +196,18 @@ export default function CreateEvent() {
         state: formData.state,
         country: formData.country,
         pincode: formData.pincode,
-        eventDate: formData.date || null,
+        eventDate: formData.date ? (() => {
+          if (formData.date.includes('-')) {
+            const [dd, mm] = formData.date.split('-');
+            return new Date(`${new Date().getFullYear()}-${mm}-${dd}`).toISOString();
+          }
+          return new Date().toISOString();
+        })() : new Date().toISOString(),
         startTime: formData.startTime,
         endTime: formData.endTime,
         ticketType: formData.isPaid ? 'paid' : 'free',
         ticketPrice: Number(formData.price) || 0,
-        maxSeats: Number(formData.maxSeats) || 0,
+        maxSeats: formData.maxSeats ? Number(formData.maxSeats) : 0,
         organizerName: formData.orgName,
         email: formData.email,
         phone: formData.phone,
@@ -277,12 +289,18 @@ export default function CreateEvent() {
         state: formData.state || 'Default State',
         country: formData.country || 'Default Country',
         pincode: formData.pincode || '000000',
-        eventDate: formData.date || new Date().toISOString(),
+        eventDate: formData.date ? (() => {
+          if (formData.date.includes('-')) {
+            const [dd, mm] = formData.date.split('-');
+            return new Date(`${new Date().getFullYear()}-${mm}-${dd}`).toISOString();
+          }
+          return new Date().toISOString();
+        })() : new Date().toISOString(),
         startTime: formData.startTime || '00:00',
         endTime: formData.endTime || '23:59',
         ticketType: formData.isPaid ? 'paid' : 'free',
         ticketPrice: Number(formData.price) || 0,
-        maxSeats: Number(formData.maxSeats) || 0,
+        maxSeats: formData.maxSeats ? Number(formData.maxSeats) : 0,
         organizerName: formData.orgName || 'Organizer',
         email: formData.email || 'email@example.com',
         phone: formData.phone || '0000000000',

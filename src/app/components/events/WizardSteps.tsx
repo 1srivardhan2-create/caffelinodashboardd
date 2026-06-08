@@ -249,10 +249,18 @@ export const Step4DateTime = ({ formData, setFormData }: any) => {
           <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
           <Input 
             id="date" 
-            type="date"
+            type="text"
+            placeholder="DD-MM"
+            maxLength={5}
             value={formData.date} 
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12 pl-10"
+            onChange={(e) => {
+              let val = e.target.value.replace(/[^\d]/g, '');
+              if (val.length > 2) {
+                val = val.slice(0, 2) + '-' + val.slice(2, 4);
+              }
+              setFormData({ ...formData, date: val });
+            }}
+            className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12 pl-10 tracking-widest font-medium"
           />
         </div>
       </div>
@@ -344,7 +352,7 @@ export const Step5Tickets = ({ formData, setFormData }: any) => {
           <Input 
             id="maxSeats" 
             type="number"
-            value={formData.maxSeats} 
+            value={formData.maxSeats === 0 ? '' : formData.maxSeats} 
             onChange={(e) => setFormData({ ...formData, maxSeats: e.target.value, availableSeats: e.target.value })}
             placeholder="e.g. 50" 
             className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
@@ -355,7 +363,7 @@ export const Step5Tickets = ({ formData, setFormData }: any) => {
           <Input 
             id="availableSeats" 
             type="number"
-            value={formData.availableSeats} 
+            value={formData.availableSeats === 0 ? '' : formData.availableSeats} 
             onChange={(e) => setFormData({ ...formData, availableSeats: e.target.value })}
             className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-gray-50 h-12 text-gray-500"
             disabled
