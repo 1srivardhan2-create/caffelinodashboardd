@@ -476,7 +476,7 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="accHolderName" className="text-[#3E2723] font-semibold">Name *</Label>
+            <Label htmlFor="accHolderName" className="text-[#3E2723] font-semibold">Account Holder Name *</Label>
             <Input 
               id="accHolderName" 
               value={formData.accHolderName} 
@@ -485,6 +485,43 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
               className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="bankName" className="text-[#3E2723] font-semibold">Bank Name *</Label>
+            <Input 
+              id="bankName" 
+              value={formData.bankName} 
+              onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+              placeholder="e.g. HDFC Bank" 
+              className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="accountNumber" className="text-[#3E2723] font-semibold">Account Number *</Label>
+            <Input 
+              id="accountNumber" 
+              type="password"
+              value={formData.accountNumber} 
+              onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+              placeholder="Account Number" 
+              className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ifscCode" className="text-[#3E2723] font-semibold">IFSC Code *</Label>
+            <Input 
+              id="ifscCode" 
+              value={formData.ifscCode} 
+              onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value })}
+              placeholder="e.g. HDFC0001234" 
+              className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-11 uppercase"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="paymentMobileNumber" className="text-[#3E2723] font-semibold">Payment Mobile Number *</Label>
             <Input 
@@ -497,7 +534,6 @@ export const Step7PaymentSettlement = ({ formData, setFormData, errors }: any) =
             {errors.paymentMobileNumber && <p className="text-xs text-red-500 flex items-center gap-1 mt-1"><AlertCircle className="size-3" /> {errors.paymentMobileNumber}</p>}
           </div>
         </div>
-
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

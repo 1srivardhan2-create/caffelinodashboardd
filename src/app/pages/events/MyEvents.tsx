@@ -115,17 +115,25 @@ export default function MyEvents() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
                 )}
-                <div className="absolute top-3 left-3 flex gap-2">
+                <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                   <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md backdrop-blur-md shadow-sm ${
                     event.status === 'published' ? 'bg-green-500/90 text-white' : 
+                    event.status === 'SOLD_OUT' ? 'bg-red-600/90 text-white' :
                     event.status === 'draft' ? 'bg-orange-500/90 text-white' : 
                     'bg-gray-500/90 text-white'
                   }`}>
-                    {event.status}
+                    {event.status.replace('_', ' ')}
                   </span>
-                  <span className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider bg-white/90 text-[#3E2723] rounded-md backdrop-blur-md shadow-sm">
-                    {event.ticketType === 'paid' ? `₹${event.ticketPrice}` : 'Free'}
+                  <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md backdrop-blur-md shadow-sm ${
+                    event.ticketType === 'paid' ? 'bg-blue-600/90 text-white' : 'bg-[#8B5E3C]/90 text-white'
+                  }`}>
+                    {event.ticketType === 'paid' ? 'PAID' : 'FREE'}
                   </span>
+                  {event.stats && event.stats.totalRegistered > 0 && (
+                    <span className="px-2.5 py-1 text-xs font-bold uppercase tracking-wider bg-purple-600/90 text-white rounded-md backdrop-blur-md shadow-sm">
+                      REGISTERED
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -144,25 +152,24 @@ export default function MyEvents() {
                   </div>
                   
                   {event.stats ? (
-                    <div className="mt-4 bg-[#FDFBF7] border border-[#E8DCC4] p-3 rounded-lg grid grid-cols-3 gap-2 text-center shadow-inner">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">Registered</span>
-                        <span className="font-extrabold text-[#3E2723]">{event.stats.totalRegistered}</span>
+                    <div className="mt-4 pt-4 border-t border-[#E8DCC4] grid grid-cols-2 gap-4 text-center">
+                      <div className="bg-[#FDFBF7] p-2 rounded-lg border border-[#E8DCC4]">
+                        <span className="block text-[10px] font-bold text-[#A89F91] uppercase tracking-wider mb-1">Registrations</span>
+                        <div className="flex items-center justify-center gap-1 text-[#3E2723] font-extrabold text-lg">
+                          <Ticket className="size-4 text-[#8B5E3C]" />
+                          {event.stats.totalRegistered}
+                        </div>
                       </div>
-                      <div className="flex flex-col border-l border-[#E8DCC4]">
-                        <span className="text-[10px] font-bold text-[#10B981] uppercase tracking-wider">Checked-In</span>
-                        <span className="font-extrabold text-[#10B981]">{event.stats.checkedInCount}</span>
-                      </div>
-                      <div className="flex flex-col border-l border-[#E8DCC4]">
-                        <span className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-wider">Pending</span>
-                        <span className="font-extrabold text-[#F59E0B]">{event.stats.pendingCount}</span>
+                      <div className="bg-[#FDFBF7] p-2 rounded-lg border border-[#E8DCC4]">
+                        <span className="block text-[10px] font-bold text-[#A89F91] uppercase tracking-wider mb-1">Revenue</span>
+                        <div className="flex items-center justify-center gap-1 text-green-700 font-extrabold text-lg">
+                          <IndianRupee className="size-4" />
+                          {event.stats.totalRegistered * (event.ticketPrice || 0)}
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Ticket className="size-4 mr-2 text-[#C19A6B]" />
-                      {event.ticketsSold} / {event.maxSeats || '∞'} sold
-                    </div>
+                    <div className="mt-4 bg-gray-50 p-3 rounded-lg text-center text-xs text-gray-400">Loading stats...</div>
                   )}
                 </div>
 

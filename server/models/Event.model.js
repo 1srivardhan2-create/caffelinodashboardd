@@ -46,13 +46,16 @@ const EventSchema = new mongoose.Schema({
 
   // STEP 7 - Payment Details
   accountHolderName: { type: String },
+  bankName: { type: String },
+  accountNumber: { type: String },
+  ifscCode: { type: String },
   paymentMobileNumber: { type: String },
   upiId: { type: String },
 
   // EVENT STATUS
   status: { 
     type: String, 
-    enum: ['draft', 'published', 'completed', 'cancelled'], 
+    enum: ['draft', 'published', 'completed', 'cancelled', 'SOLD_OUT'], 
     default: 'draft' 
   },
 

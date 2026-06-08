@@ -60,7 +60,7 @@ exports.saveDraft = async (req, res) => {
     const { _id, ...eventData } = req.body;
     
     // Encrypt sensitive bank details if present
-    const sensitiveFields = ['accountHolderName', 'paymentMobileNumber', 'upiId'];
+    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'paymentMobileNumber', 'upiId'];
     sensitiveFields.forEach(field => {
       if (eventData[field]) {
         eventData[field] = encrypt(eventData[field]);
@@ -92,12 +92,15 @@ exports.createEvent = async (req, res) => {
       eventDate, startTime, endTime, timezone,
       ticketType, ticketPrice, maxSeats, availableSeats,
       organizerName, email, phone, eventInstagramId, organizerId,
-      accountHolderName, paymentMobileNumber, upiId
+      accountHolderName, bankName, accountNumber, ifscCode, paymentMobileNumber, upiId
     } = req.body;
 
     // Encrypt sensitive bank details
     const encryptedBankDetails = {
       accountHolderName: encrypt(accountHolderName),
+      bankName: encrypt(bankName),
+      accountNumber: encrypt(accountNumber),
+      ifscCode: encrypt(ifscCode),
       paymentMobileNumber: encrypt(paymentMobileNumber),
       upiId: encrypt(upiId)
     };
@@ -133,7 +136,7 @@ exports.updateEvent = async (req, res) => {
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
 
     // Handle encryption if bank details are updated
-    const sensitiveFields = ['accountHolderName', 'paymentMobileNumber', 'upiId'];
+    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'paymentMobileNumber', 'upiId'];
     sensitiveFields.forEach(field => {
       if (updateData[field]) {
         updateData[field] = encrypt(updateData[field]);
@@ -189,6 +192,9 @@ exports.getEventById = async (req, res) => {
     // Assuming frontend calls this for view: we exclude sensitive info.
     const eventObj = event.toObject();
     delete eventObj.accountHolderName;
+    delete eventObj.bankName;
+    delete eventObj.accountNumber;
+    delete eventObj.ifscCode;
     delete eventObj.paymentMobileNumber;
     delete eventObj.upiId;
 
@@ -211,6 +217,9 @@ exports.getEventForEdit = async (req, res) => {
 
     const eventObj = event.toObject();
     if (eventObj.accountHolderName) eventObj.accountHolderName = decrypt(eventObj.accountHolderName);
+    if (eventObj.bankName) eventObj.bankName = decrypt(eventObj.bankName);
+    if (eventObj.accountNumber) eventObj.accountNumber = decrypt(eventObj.accountNumber);
+    if (eventObj.ifscCode) eventObj.ifscCode = decrypt(eventObj.ifscCode);
     if (eventObj.paymentMobileNumber) eventObj.paymentMobileNumber = decrypt(eventObj.paymentMobileNumber);
     if (eventObj.upiId) eventObj.upiId = decrypt(eventObj.upiId);
 
@@ -310,7 +319,13 @@ exports.registerEvent = async (req, res) => {
     // Update Event counts
     event.availableSeats -= ticketCount;
     event.ticketsSold += ticketCount;
-    event.registrationsCount += 1;
+    event.registrations += 1;
+    
+    // SOLD OUT status check
+    if (event.availableSeats <= 0) {
+      event.status = 'SOLD_OUT';
+    }
+    
     await event.save();
 
     // Generate Tickets
