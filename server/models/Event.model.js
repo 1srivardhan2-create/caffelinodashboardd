@@ -38,6 +38,7 @@ const EventSchema = new mongoose.Schema({
   ticketsSold: { type: Number, default: 0 },
 
   // STEP 6 - Organizer Information
+  organizationName: { type: String },
   organizerName: { type: String },
   email: { type: String },
   phone: { type: String },

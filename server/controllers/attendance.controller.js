@@ -72,6 +72,8 @@ exports.verifyTicket = async (req, res) => {
         registrationId: registration._id,
         eventName: event.eventName,
         eventCategory: event.eventCategory,
+        organizationName: event.organizationName,
+        organizerName: event.organizerName,
         eventDate: event.eventDate,
         startTime: event.startTime,
         venueName: event.venueName,

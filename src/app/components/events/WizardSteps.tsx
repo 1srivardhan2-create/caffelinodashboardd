@@ -378,6 +378,17 @@ export const Step6Organizer = ({ formData, setFormData }: any) => {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
+        <Label htmlFor="orgCompName" className="text-[#3E2723] font-semibold">Organization / Club / Company Name *</Label>
+        <Input 
+          id="orgCompName" 
+          value={formData.orgCompName} 
+          onChange={(e) => setFormData({ ...formData, orgCompName: e.target.value })}
+          placeholder="e.g. TEDx Hyderabad / Caffelino Events" 
+          className="border-[#E8DCC4] focus-visible:ring-[#8B5E3C] bg-white h-12"
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="orgName" className="text-[#3E2723] font-semibold">Organizer Name *</Label>
         <Input 
           id="orgName" 

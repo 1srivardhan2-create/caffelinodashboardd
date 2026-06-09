@@ -90,8 +90,8 @@ exports.createEvent = async (req, res) => {
       bannerUrl, bannerPublicId,
       cafeId, cafeName, venueName, address, googleMapsLink, city, state, country, pincode, latitude, longitude,
       eventDate, startTime, endTime, timezone,
-      ticketType, ticketPrice, maxSeats, availableSeats,
-      organizerName, email, phone, eventInstagramId, organizerId,
+      ticketType, ticketPrice, maxSeats, 
+      organizationName, organizerName, email, phone, eventInstagramId, organizerId,
       accountHolderName, bankName, accountNumber, ifscCode, paymentMobileNumber, upiId
     } = req.body;
 
@@ -110,9 +110,15 @@ exports.createEvent = async (req, res) => {
       bannerUrl, bannerPublicId,
       cafeId, cafeName, venueName, address, googleMapsLink, city, state, country, pincode, latitude, longitude,
       eventDate, startTime, endTime, timezone,
-      ticketType, ticketPrice: ticketType === 'free' ? 0 : ticketPrice,
-      maxSeats, availableSeats: maxSeats,
-      organizerName, email, phone, eventInstagramId, organizerId,
+      ticketType,
+      ticketPrice: Number(ticketPrice) || 0,
+      maxSeats: Number(maxSeats) || 0,
+      availableSeats: Number(maxSeats) || 0,
+      organizationName,
+      organizerName,
+      email,
+      phone,
+      eventInstagramId, organizerId,
       ...encryptedBankDetails,
       status: 'published'
     });
@@ -241,7 +247,7 @@ exports.publishEvent = async (req, res) => {
       'eventName', 'eventDescription', 'eventCategory', 'bannerUrl', 
       'venueName', 'address', 'city', 'state', 'country', 'pincode', 
       'eventDate', 'startTime', 'endTime', 'ticketType', 'maxSeats', 
-      'organizerName', 'email', 'phone'
+      'organizationName', 'organizerName', 'email', 'phone'
     ];
 
     const missingFields = requiredFields.filter(field => !event[field]);
@@ -501,7 +507,9 @@ exports.getEventAnalytics = async (req, res) => {
       shares: event.shares,
       registrations: event.registrations,
       ticketsSold: event.ticketsSold,
-      revenue: event.ticketsSold * event.ticketPrice
+      revenue: event.ticketsSold * event.ticketPrice,
+      organizationName: event.organizationName,
+      organizerName: event.organizerName,
     };
     
     res.status(200).json({ success: true, analytics });

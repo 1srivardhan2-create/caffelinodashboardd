@@ -139,7 +139,13 @@ export default function MyEvents() {
 
               <div className="p-5 flex-1 flex flex-col">
                 <h3 className="font-bold text-lg text-[#3E2723] mb-1 line-clamp-1">{event.eventName || 'Untitled Event'}</h3>
-                <p className="text-sm text-[#8B5E3C] mb-4 line-clamp-1">{event.eventCategory || 'Uncategorized'}</p>
+                {event.organizationName ? (
+                  <p className="text-sm font-medium text-[#8B5E3C] mb-4 line-clamp-1">Hosted by {event.organizationName}</p>
+                ) : event.organizerName ? (
+                  <p className="text-sm font-medium text-[#8B5E3C] mb-4 line-clamp-1">By {event.organizerName}</p>
+                ) : (
+                  <p className="text-sm font-medium text-[#8B5E3C] mb-4 line-clamp-1">{event.eventCategory || 'Uncategorized'}</p>
+                )}
 
                 <div className="space-y-2 mb-6">
                   <div className="flex items-center text-sm text-gray-600">
