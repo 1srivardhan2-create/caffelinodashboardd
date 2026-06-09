@@ -1,6 +1,14 @@
 const Event = require('../models/Event.model');
 const User = require('../models/User.model');
-const { decrypt } = require('../utils/cryptoHelper');
+
+const formatLegacyData = (val) => {
+  if (!val) return null;
+  // If value contains IV separator and is a long hex string, mark it as legacy
+  if (val.includes(':') && val.length > 30) {
+    return 'Encrypted Legacy Data';
+  }
+  return val;
+};
 
 exports.getEventFullDetails = async (req, res) => {
   try {
@@ -15,13 +23,16 @@ exports.getEventFullDetails = async (req, res) => {
     // Find the organizer details
     const organizer = await User.findById(event.organizerId).select('-password');
 
-    // Decrypt bank details
+    // Format bank details to handle legacy encrypted strings
     let decryptedBankDetails = {};
-    if (event.accountHolderName || event.paymentMobileNumber || event.upiId) {
+    if (event.accountHolderName || event.paymentMobileNumber || event.upiId || event.bankName || event.accountNumber || event.ifscCode) {
       decryptedBankDetails = {
-        accountHolderName: event.accountHolderName ? decrypt(event.accountHolderName) : null,
-        paymentMobileNumber: event.paymentMobileNumber ? decrypt(event.paymentMobileNumber) : null,
-        upiId: event.upiId ? decrypt(event.upiId) : null,
+        accountHolderName: formatLegacyData(event.accountHolderName),
+        paymentMobileNumber: formatLegacyData(event.paymentMobileNumber),
+        upiId: formatLegacyData(event.upiId),
+        bankName: formatLegacyData(event.bankName),
+        accountNumber: formatLegacyData(event.accountNumber),
+        ifscCode: formatLegacyData(event.ifscCode)
       };
     }
 

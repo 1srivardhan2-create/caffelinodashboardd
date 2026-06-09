@@ -57,9 +57,6 @@ export default function CreateEvent() {
     eventInstagramId: '',
     // Payment Fields
     accHolderName: '',
-    bankName: '',
-    accountNumber: '',
-    ifscCode: '',
     paymentMobileNumber: '',
     upiId: '',
     confirmUpiId: '',
@@ -117,9 +114,6 @@ export default function CreateEvent() {
               phone: ev.phone || '',
               eventInstagramId: ev.eventInstagramId || '',
               accHolderName: ev.accountHolderName || '',
-              bankName: ev.bankName || '',
-              accountNumber: ev.accountNumber || '',
-              ifscCode: ev.ifscCode || '',
               paymentMobileNumber: ev.paymentMobileNumber || '',
               upiId: ev.upiId || '',
               confirmUpiId: ev.upiId || '',
@@ -144,6 +138,7 @@ export default function CreateEvent() {
   }, [eventId, draftId, user]);
 
   const [errors, setErrors] = useState({
+    accHolderName: '',
     paymentMobileNumber: '',
     upiId: '',
     confirmUpiId: ''
@@ -151,7 +146,12 @@ export default function CreateEvent() {
 
   const validatePayment = () => {
     let isValid = true;
-    const newErrors = { paymentMobileNumber: '', upiId: '', confirmUpiId: '' };
+    const newErrors = { accHolderName: '', paymentMobileNumber: '', upiId: '', confirmUpiId: '' };
+
+    if (!formData.accHolderName) {
+      newErrors.accHolderName = 'Account holder name is required';
+      isValid = false;
+    }
 
     if (!formData.paymentMobileNumber || !/^\d{10}$/.test(formData.paymentMobileNumber)) {
       newErrors.paymentMobileNumber = 'Valid 10-digit mobile number is required';
@@ -216,9 +216,6 @@ export default function CreateEvent() {
         phone: formData.phone,
         eventInstagramId: formData.eventInstagramId,
         accountHolderName: formData.accHolderName,
-        bankName: formData.bankName,
-        accountNumber: formData.accountNumber,
-        ifscCode: formData.ifscCode,
         paymentMobileNumber: formData.paymentMobileNumber,
         upiId: formData.upiId,
         organizerId: user?.id,
@@ -269,7 +266,7 @@ export default function CreateEvent() {
         toast.error('Please fix payment details errors.');
         return;
       }
-      if (!formData.paymentMobileNumber || !formData.upiId || !formData.accHolderName || !formData.bankName || !formData.accountNumber || !formData.ifscCode) {
+      if (!formData.paymentMobileNumber || !formData.upiId || !formData.accHolderName) {
         toast.error('All payment and bank details are mandatory for paid events.');
         return;
       }
@@ -310,9 +307,6 @@ export default function CreateEvent() {
         phone: formData.phone || '0000000000',
         eventInstagramId: formData.eventInstagramId,
         accountHolderName: formData.accHolderName,
-        bankName: formData.bankName,
-        accountNumber: formData.accountNumber,
-        ifscCode: formData.ifscCode,
         paymentMobileNumber: formData.paymentMobileNumber,
         upiId: formData.upiId,
         organizerId: user?.id,

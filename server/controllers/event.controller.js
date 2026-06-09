@@ -4,7 +4,6 @@ const Ticket = require('../models/Ticket.model');
 const Payment = require('../models/Payment.model');
 const Settlement = require('../models/Settlement.model');
 const Attendance = require('../models/Attendance.model');
-const { encrypt, decrypt } = require('../utils/cryptoHelper');
 const uploadBuffer = require('../utils/uploadToCloudinary');
 const cloudinary = require('../config/cloudinary');
 const qrcode = require('qrcode');
@@ -58,14 +57,6 @@ exports.uploadBanner = async (req, res) => {
 exports.saveDraft = async (req, res) => {
   try {
     const { _id, ...eventData } = req.body;
-    
-    // Encrypt sensitive bank details if present
-    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'paymentMobileNumber', 'upiId'];
-    sensitiveFields.forEach(field => {
-      if (eventData[field]) {
-        eventData[field] = encrypt(eventData[field]);
-      }
-    });
 
     let draftEvent;
     if (_id) {
@@ -95,14 +86,14 @@ exports.createEvent = async (req, res) => {
       accountHolderName, bankName, accountNumber, ifscCode, paymentMobileNumber, upiId
     } = req.body;
 
-    // Encrypt sensitive bank details
-    const encryptedBankDetails = {
-      accountHolderName: encrypt(accountHolderName),
-      bankName: encrypt(bankName),
-      accountNumber: encrypt(accountNumber),
-      ifscCode: encrypt(ifscCode),
-      paymentMobileNumber: encrypt(paymentMobileNumber),
-      upiId: encrypt(upiId)
+    // Store as plain text
+    const bankDetails = {
+      accountHolderName,
+      bankName,
+      accountNumber,
+      ifscCode,
+      paymentMobileNumber,
+      upiId
     };
 
     const newEvent = new Event({
@@ -119,7 +110,7 @@ exports.createEvent = async (req, res) => {
       email,
       phone,
       eventInstagramId, organizerId,
-      ...encryptedBankDetails,
+      ...bankDetails,
       status: 'published'
     });
 
@@ -140,14 +131,6 @@ exports.updateEvent = async (req, res) => {
 
     const event = await Event.findById(id);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
-
-    // Handle encryption if bank details are updated
-    const sensitiveFields = ['accountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'paymentMobileNumber', 'upiId'];
-    sensitiveFields.forEach(field => {
-      if (updateData[field]) {
-        updateData[field] = encrypt(updateData[field]);
-      }
-    });
 
     const updatedEvent = await Event.findByIdAndUpdate(id, updateData, { new: true });
     res.status(200).json({ success: true, message: 'Event updated successfully', event: updatedEvent });
