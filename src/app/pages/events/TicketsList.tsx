@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useEventAuth } from '../../context/EventAuthContext';
 import { api } from '../../../services/api';
-import { Ticket, Search, User, Phone, Mail, CalendarDays, CheckCircle2, XCircle } from 'lucide-react';
+import { Ticket, Search, User, Phone, Mail, CalendarDays, CheckCircle2, XCircle, Filter } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 
 interface TicketData {
@@ -27,6 +27,7 @@ export default function TicketsList() {
   const [tickets, setTickets] = useState<TicketData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState('all');
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -49,14 +50,18 @@ export default function TicketsList() {
     }
   }, [user]);
 
+  const uniqueEvents = Array.from(new Map(tickets.filter(t => t.eventId).map(t => [t.eventId._id, t.eventId])).values());
+
   const filteredTickets = tickets.filter(ticket => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       ticket.ticketNumber.toLowerCase().includes(term) ||
       ticket.registrationId?.userName?.toLowerCase().includes(term) ||
       ticket.registrationId?.email?.toLowerCase().includes(term) ||
       ticket.eventId?.eventName?.toLowerCase().includes(term)
     );
+    const matchesEvent = selectedEventId === 'all' || ticket.eventId?._id === selectedEventId;
+    return matchesSearch && matchesEvent;
   });
 
   if (loading) {
@@ -81,15 +86,31 @@ export default function TicketsList() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-[#E8DCC4] p-4 flex items-center gap-3">
-        <Search className="size-5 text-[#A89F91]" />
-        <Input 
-          type="text"
-          placeholder="Search by Ticket ID, Name, Email or Event..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border-none shadow-none focus-visible:ring-0 text-base"
-        />
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-[#E8DCC4] p-4 flex items-center gap-3 flex-1">
+          <Search className="size-5 text-[#A89F91]" />
+          <Input 
+            type="text"
+            placeholder="Search by Ticket ID, Name, Email or Event..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border-none shadow-none focus-visible:ring-0 text-base"
+          />
+        </div>
+        
+        <div className="bg-white rounded-2xl shadow-sm border border-[#E8DCC4] p-4 flex items-center gap-3 shrink-0 md:min-w-[250px]">
+          <Filter className="size-5 text-[#A89F91]" />
+          <select
+            value={selectedEventId}
+            onChange={(e) => setSelectedEventId(e.target.value)}
+            className="w-full bg-transparent border-none text-[#5C3A21] focus:outline-none focus:ring-0 font-medium cursor-pointer"
+          >
+            <option value="all">All Events</option>
+            {uniqueEvents.map(ev => (
+              <option key={ev._id} value={ev._id}>{ev.eventName}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-[#E8DCC4] overflow-hidden">
